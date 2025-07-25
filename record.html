@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Record - Aasha Tutorial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4; /* Light background */
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #4CAF50; /* Green */
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .profile-section, .fees-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .profile-details p {
+            margin: 8px 0;
+        }
+        .profile-details strong {
+            display: inline-block;
+            width: 120px;
+        }
+        .student-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 3px solid #4CAF50;
+        }
+        .fees-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .fees-table th, .fees-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .fees-table th {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+        .status-paid {
+            color: green;
+            font-weight: bold;
+        }
+        .status-unpaid {
+            color: red;
+            font-weight: bold;
+        }
+        .complete-profile-section {
+            text-align: center;
+            padding: 50px;
+            background-color: #fff3cd; /* Warning-like background */
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            color: #856404; /* Dark yellow text */
+        }
+        .complete-profile-section button {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .complete-profile-section button:hover {
+            background-color: #45a049;
+        }
+
+        /* Dark Theme Adaptation (Example) */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: #e0e0e0;
+            }
+            .container {
+                background-color: #2c2c2c;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            }
+            h2 {
+                color: #81c784;
+                border-bottom-color: #81c784;
+            }
+            .profile-section, .fees-section {
+                background-color: #3a3a3a;
+                border-color: #555;
+            }
+            .profile-details strong {
+                color: #b3e5bc;
+            }
+            .fees-table th {
+                background-color: #388e3c; /* Darker green for dark theme header */
+            }
+            .fees-table td {
+                border-color: #555;
+            }
+            .complete-profile-section {
+                background-color: #4a412a; /* Darker warning */
+                border-color: #6d613c;
+                color: #ffed8d;
+            }
+            .complete-profile-section button {
+                background-color: #388e3c;
+            }
+            .complete-profile-section button:hover {
+                background-color: #2e7d32;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+</head>
+<body>
+    <div class="container">
+        <h2 id="page-title">Student Record</h2>
+
+        <div id="loading-spinner" style="text-align: center; padding: 50px; display: none;">
+            <p>Loading student data...</p>
+            </div>
+
+        <div id="complete-profile-section" class="complete-profile-section" style="display: none;">
+            <h3>Your Profile is Incomplete!</h3>
+            <p>Please complete your profile to view your full details and fees information.</p>
+            <button onclick="window.location.href='profile.html'">Complete Profile Now</button>
+        </div>
+
+        <div id="student-details-section" class="profile-section" style="display: none;">
+            <h2>Student Details</h2>
+            <div style="text-align: center;">
+                <img id="studentPhoto" class="student-photo" src="placeholder.jpg" alt="Student Photo">
+            </div>
+            <div class="profile-details">
+                <p><strong>Name:</strong> <span id="studentName"></span></p>
+                <p><strong>Standard:</strong> <span id="studentStd"></span></p>
+                <p><strong>Date of Birth:</strong> <span id="studentDob"></span></p>
+                <p><strong>Mobile No.:</strong> <span id="studentMob"></span></p>
+                <p><strong>School Name:</strong> <span id="studentSchool"></span></p>
+                <p><strong>Address:</strong> <span id="studentAddress"></span></p>
+            </div>
+        </div>
+
+        <div id="fees-details-section" class="fees-section" style="display: none;">
+            <h2>Fees Details</h2>
+            <p><strong>Monthly Fees:</strong> ₹<span id="monthlyFees"></span></p>
+            <h3>Fees Card (June 2025 - April 2026)</h3>
+            <table class="fees-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Status</th>
+                        <th>Date of Payment</th>
+                    </tr>
+                </thead>
+                <tbody id="feesTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Function to parse DD/MM/YYYY string into a Date object
+        function parseDMYtoDate(dateString) {
+            if (!dateString) return null;
+            const parts = dateString.split('/');
+            // Check if parts array has exactly 3 elements (day, month, year)
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed in JavaScript Date
+                const year = parseInt(parts[2], 10);
+                const date = new Date(year, month, day);
+
+                // Validate if the parsed date is actually correct
+                // This checks if the date components match the input, preventing invalid dates
+                if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+                    return date;
+                }
+            }
+            return null; // Return null for invalid or unparseable formats
+        }
+
+        // Appwrite Client Initialization - UPDATED
+        const client = new Appwrite.Client();
+        client
+            .setEndpoint('https://nyc.cloud.appwrite.io/v1') // Your API Endpoint
+            .setProject('685cb0a90017cc71f99e'); // Your Project ID
+
+        const databases = new Appwrite.Databases(client); // Use Appwrite.Databases
+        const storage = new Appwrite.Storage(client); // Use Appwrite.Storage
+        const Query = Appwrite.Query; // Access Query directly from Appwrite object
+
+        const DATABASE_ID = '685d0c85000aa071581a'; // Your Database ID
+        const COLLECTION_ID = '68838ce2003da61468e0'; // Your Collection ID
+        const BUCKET_ID = '685dee56002dac3412a7'; // Your Bucket ID
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loggedInStudentId = sessionStorage.getItem('loggedInStudentId');
+            if (!loggedInStudentId) {
+                // If no student ID in session, redirect to login
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const completeProfileSection = document.getElementById('complete-profile-section');
+            const studentDetailsSection = document.getElementById('student-details-section');
+            const feesDetailsSection = document.getElementById('fees-details-section');
+
+            loadingSpinner.style.display = 'block'; // Show loading spinner
+
+            try {
+                const response = await databases.listDocuments(
+                    DATABASE_ID,
+                    COLLECTION_ID,
+                    [
+                        Query.equal('id', loggedInStudentId),
+                        Query.limit(1)
+                    ]
+                );
+
+                if (response.documents.length === 0) {
+                    // Should not happen if login was successful, but handle
+                    alert('Student record not found. Please log in again.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const studentData = response.documents[0];
+
+                // --- Profile Completion Check ---
+                let isProfileComplete = true;
+                const attributesToCheck = ['std', 'dob', 'mob', 'school', 'add', 'photoId']; // Exclude name, id, fees, paidMonth, paidDate
+
+                for (const attr of attributesToCheck) {
+                    if (!studentData[attr] || studentData[attr] === '') {
+                        isProfileComplete = false;
+                        break;
+                    }
+                }
+
+                if (!isProfileComplete) {
+                    studentDetailsSection.style.display = 'none';
+                    feesDetailsSection.style.display = 'none';
+                    completeProfileSection.style.display = 'block';
+                } else {
+                    completeProfileSection.style.display = 'none';
+                    studentDetailsSection.style.display = 'block';
+                    feesDetailsSection.style.display = 'block';
+
+                    // --- Populate Student Details ---
+                    document.getElementById('studentName').textContent = studentData.name || 'N/A';
+                    document.getElementById('studentStd').textContent = studentData.std || 'N/A';
+                    document.getElementById('studentDob').textContent = studentData.dob || 'N/A';
+                    document.getElementById('studentMob').textContent = studentData.mob || 'N/A';
+                    document.getElementById('studentSchool').textContent = studentData.school || 'N/A';
+                    document.getElementById('studentAddress').textContent = studentData.add || 'N/A';
+
+                    // Fetch and display student photo
+                    if (studentData.photoId) {
+                        try {
+                            // Get a file preview URL from Appwrite Storage
+                            const fileUrl = storage.getFileDownload(
+                                BUCKET_ID,
+                                studentData.photoId
+                            );
+                            document.getElementById('studentPhoto').src = fileUrl;
+                        } catch (photoError) {
+                            console.error("Error fetching student photo:", photoError);
+                            document.getElementById('studentPhoto').src = 'placeholder.jpg'; // Fallback
+                        }
+                    } else {
+                        document.getElementById('studentPhoto').src = 'placeholder.jpg'; // Default placeholder
+                    }
+
+
+                    // --- Populate Fees Details ---
+                    document.getElementById('monthlyFees').textContent = studentData.fees ? studentData.fees.toFixed(2) : 'N/A';
+
+                    const feesTableBody = document.getElementById('feesTableBody');
+                    const paidMonths = studentData.paidMonth || []; // Array of paid month names (e.g., ["June 2025", "July 2025"])
+                    const paidDates = studentData.paidDate || []; // Array of payment dates
+
+                    const academicMonths = [
+                        "June 2025", "July 2025", "August 2025", "September 2025", "October 2025",
+                        "November 2025", "December 2025", "January 2026", "February 2026",
+                        "March 2026", "April 2026"
+                    ];
+
+                    feesTableBody.innerHTML = ''; // Clear existing rows
+
+                    academicMonths.forEach(month => {
+                        const row = feesTableBody.insertRow();
+                        const monthCell = row.insertCell();
+                        const statusCell = row.insertCell();
+                        const dateCell = row.insertCell();
+
+                        monthCell.textContent = month;
+
+                        const paidIndex = paidMonths.indexOf(month);
+                        if (paidIndex !== -1) {
+                            statusCell.textContent = 'Paid';
+                            statusCell.classList.add('status-paid');
+                            const paymentDateString = paidDates[paidIndex];
+                            // Use the new parseDMYtoDate function here
+                            const paymentDate = parseDMYtoDate(paymentDateString);
+                            dateCell.textContent = paymentDate ? paymentDate.toLocaleDateString() : 'Invalid Date';
+                        } else {
+                            statusCell.textContent = 'Unpaid';
+                            statusCell.classList.add('status-unpaid');
+                            dateCell.textContent = '-';
+                        }
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error fetching student record:", error);
+                alert('Failed to load student data. Please try logging in again.');
+                window.location.href = 'login.html'; // Redirect on severe error
+            } finally {
+                loadingSpinner.style.display = 'none'; // Hide loading spinner
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aasha Tutorial - Home</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Theme Variables - Consistent with register_page.html */
+        :root {
+            /* Dark Theme (Green and Black) */
+            --bg-color: black;
+            --text-color: white;
+            --accent-color: #1a5f1a; /* Dull and Dark Green */
+            --card-bg: #242424; /* Dark grey for cards */
+            --header-bg: #212121; /* Darker header for dark theme */
+            --hero-bg: #212121; /* Darker hero for dark theme */
+            --section-border-color: #555; /* Lighter border in dark theme */
+            --section-heading-color: #81c784; /* Lighter green for headings in dark theme */
+        }
+
+        [data-theme="light"] {
+            /* Light Theme (Green and White) */
+            --bg-color: #f4f4f4; /* Light background */
+            --text-color: #333; /* Dark text for light theme */
+            --accent-color: #4CAF50; /* Primary Green */
+            --card-bg: white;
+            --header-bg: #4CAF50; /* Primary Green for header */
+            --hero-bg: #e8f5e9; /* Light green background for hero */
+            --section-border-color: #eee; /* Lighter border in light theme */
+            --section-heading-color: #4CAF50; /* Primary green for headings in light theme */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+        }
+        .header {
+            background-color: var(--header-bg);
+            color: white; /* Text color for header, usually always white for contrast */
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px; /* Space between header elements */
+        }
+        .header .logo-text { /* Added class for potential logo text styling */
+            margin: 0;
+            font-size: 2em;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between login button and toggle */
+        }
+        .header .login-btn {
+            background-color: white; /* White for light theme, Green for dark theme */
+            color: var(--accent-color); /* Green for light theme, White for dark theme */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        [data-theme="light"] .header .login-btn {
+             background-color: #f4f4f4; /* White */
+             color: #4CAF50; /* Green */
+        }
+        [data-theme="dark"] .header .login-btn {
+             background-color: var(--accent-color); /* Dull and Dark Green */
+             color: white;
+        }
+
+        .header .login-btn:hover {
+            opacity: 0.9;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: 1px solid white; /* White border for contrast */
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .theme-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2); /* Subtle hover */
+        }
+        /* Specific hover for light theme */
+        [data-theme="light"] .theme-toggle-btn {
+            border-color: white;
+            color: white;
+        }
+        [data-theme="light"] .theme-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        /* Specific hover for dark theme */
+        [data-theme="dark"] .theme-toggle-btn {
+            border-color: white;
+            color: white;
+        }
+        [data-theme="dark"] .theme-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hero {
+            text-align: center;
+            padding: 50px 0;
+            background-color: var(--hero-bg);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .hero img {
+            max-width: 150px; /* Adjust logo size */
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid var(--section-border-color); /* Add a subtle border */
+            padding: 20px;
+            border-radius: 8px;
+            background-color: var(--card-bg); /* Use card background */
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        .section h2 {
+            color: var(--section-heading-color);
+            border-bottom: 2px solid var(--section-heading-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+        .section ul {
+            list-style: none; /* Remove default bullets */
+            padding: 0;
+        }
+        .section ul li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 25px; /* Space for custom bullet/icon */
+        }
+        .section ul li::before {
+            content: "\f058"; /* Font Awesome check-circle icon */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900; /* Solid icon */
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            top: 2px;
+            font-size: 0.9em;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                padding: 10px;
+            }
+            .header .logo-text {
+                font-size: 1.8em;
+                margin-bottom: 10px;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            .hero {
+                padding: 30px 0;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+</head>
+<body>
+    <header class="header">
+        <h1 class="logo-text">Aasha Tutorial</h1>
+        <div class="header-actions">
+            <a href="login.html" class="login-btn">Student Login</a>
+            <button id="themeToggle" class="theme-toggle-btn">
+                <i class="fas fa-sun"></i> </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <img src="logo.png" alt="Aasha Tutorial Logo">
+            <h2>Welcome to Aasha Tutorial</h2>
+            <p>Your journey to academic excellence starts here!</p>
+            <p>Located in Naigaon East, Palghar, we empower school students from 1st to 10th grade.</p>
+        </section>
+
+        <section class="section">
+            <h2>About Us</h2>
+            <p>Aasha Tutorial is a leading coaching institute dedicated to providing high-quality education and fostering a strong foundation for young minds. Our experienced educators and comprehensive curriculum ensure that every student receives personalized attention and achieves their full potential.</p>
+        </section>
+
+        <section class="section">
+            <h2>Our Batches</h2>
+            <p>We offer specialized batches for students from Grade 1 to Grade 10, covering all core subjects. Our small batch sizes ensure individual focus and interactive learning sessions.</p>
+            <ul>
+                <li>Grade 1-4: Foundational Learning & Language Skills</li>
+                <li>Grade 5-7: Core Subject Mastery & Problem Solving</li>
+                <li>Grade 8-10: Advanced Concepts & Exam Preparation</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Key Features</h2>
+            <ul>
+                <li>Experienced and Dedicated Faculty</li>
+                <li>Comprehensive Study Material</li>
+                <li>Regular Assessments and Progress Tracking</li>
+                <li>Doubt Clearing Sessions</li>
+                <li>Interactive Learning Environment</li>
+                <li>Parent-Teacher Meetings</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Services</h2>
+            <p>Beyond classroom teaching, we offer:</p>
+            <ul>
+                <li>Individual Mentoring</li>
+                <li>Career Guidance (for higher grades)</li>
+                <li>Mock Tests and Performance Analysis</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Highlights</h2>
+            <p>Our students consistently achieve excellent results in school examinations. We focus not just on grades, but on building a strong conceptual understanding and a lifelong love for learning.</p>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('themeToggle');
+            const body = document.body;
+            const themeIcon = themeToggleBtn.querySelector('i');
+
+            // Function to apply theme
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    body.setAttribute('data-theme', 'light');
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon'); // Show moon icon when in light mode (to toggle to dark)
+                } else {
+                    body.removeAttribute('data-theme'); // Remove data-theme for default (dark)
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun'); // Show sun icon when in dark mode (to toggle to light)
+                }
+                localStorage.setItem('theme', theme); // Save preference
+            }
+
+            // Load saved theme on initial page load
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else {
+                // If no theme saved, check system preference (optional, but good fallback)
+                // For this project, we default to dark as per initial setup
+                // if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                //     applyTheme('light');
+                // } else {
+                    applyTheme('dark'); // Default to dark if no saved theme
+                // }
+            }
+
+            // Toggle theme on button click
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                applyTheme(newTheme);
+            });
+        });
+    </script>
+</body>
+</html>
