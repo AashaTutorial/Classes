@@ -265,7 +265,9 @@
         }
 
         let photoUploadInProgress = false;
-        let isPhotoUploadSuccessful = true; // Assume true initially if no photo is being uploaded or there's an existing one
+        // Initialize isPhotoUploadSuccessful to false. It will be set to true only if a photo is
+        // already present (fetched from DB) or successfully uploaded.
+        let isPhotoUploadSuccessful = false; 
 
         // Get global references to elements that will be used across functions
         const stdInput = document.getElementById('std');
@@ -292,11 +294,12 @@
             console.log('--- checkFormValidityAndToggleSaveButton ---');
             console.log('allRequiredFieldsFilled:', allRequiredFieldsFilled);
             console.log('photoUploadInProgress:', photoUploadInProgress);
-            console.log('isPhotoUploadSuccessful:', isPhotoUploadSuccessful);
+            console.log('isPhotoUploadSuccessful (current state):', isPhotoUploadSuccessful); 
 
             // Button is enabled if all text fields are filled AND no photo upload is in progress AND photo upload was successful (if attempted)
             saveProfileBtn.disabled = !(allRequiredFieldsFilled && !photoUploadInProgress && isPhotoUploadSuccessful);
             console.log('saveProfileBtn.disabled set to:', saveProfileBtn.disabled);
+            console.log('--------------------------------------------');
 
 
             if (!saveProfileBtn.disabled) {
@@ -356,20 +359,27 @@
                             currentPhotoPreview.style.display = 'block';
                             photoUploadStatus.textContent = 'Current photo loaded.';
                             photoUploadStatus.className = 'success';
+                            isPhotoUploadSuccessful = true; // Set to true if a photo is already present
                         } catch (fileError) {
                             console.warn('Could not load photo preview:', fileError);
                             currentPhotoPreview.style.display = 'none';
                             photoUploadStatus.textContent = 'Could not load current photo.';
                             photoUploadStatus.className = 'error';
+                            isPhotoUploadSuccessful = false; // Failed to load existing photo, so not successful
                         }
                     } else {
                         photoUploadStatus.textContent = 'No photo uploaded yet.';
                         photoUploadStatus.className = '';
+                        isPhotoUploadSuccessful = false; // No photo exists, so not successful until one is uploaded
                     }
+                } else {
+                    // No existing document, so no photo exists yet.
+                    isPhotoUploadSuccessful = false;
                 }
             } catch (error) {
                 console.error("Error fetching student data:", error);
                 displayMessage('Failed to load existing profile data. Please try again.', 'error');
+                isPhotoUploadSuccessful = false; // Assume not successful if there's an error
             }
 
             // Initial check to set button state after loading existing data
@@ -427,7 +437,7 @@
                     currentPhotoFileId = null; // Clear existing photo ID from memory
                     currentPhotoPreview.src = ''; // Clear preview source
                     currentPhotoPreview.style.display = 'none'; // Hide preview
-                    isPhotoUploadSuccessful = true; // No photo to upload, so it's "successful" in that sense
+                    isPhotoUploadSuccessful = false; // Now no photo exists, so not successful
                     photoUploadInProgress = false; // No upload in progress
                     console.log('Photo input cleared. currentPhotoFileId set to null.');
                     checkFormValidityAndToggleSaveButton();
@@ -435,7 +445,7 @@
                     // No photo selected and no current photo
                     photoUploadStatus.textContent = 'No photo selected.';
                     photoUploadStatus.className = '';
-                    isPhotoUploadSuccessful = true;
+                    isPhotoUploadSuccessful = false; // No photo, so not successful
                     photoUploadInProgress = false; // No upload in progress
                     console.log('No photo selected or cleared. Setting photo flags to default.');
                     checkFormValidityAndToggleSaveButton();
@@ -461,31 +471,6 @@
                 const studentAddress = addressInput.value.trim();
 
                 let photoIdToSave = currentPhotoFileId; // This holds the ID of the photo that should be linked (newly uploaded or existing)
-
-                // The logic for deleting old photos should happen here, before saving the profile data.
-                // This correctly handles cases where:
-                // 1. A new photo was uploaded (currentPhotoFileId would have been updated in photoInput.change)
-                // 2. The user explicitly cleared the photo input (currentPhotoFileId would be null)
-
-                // If a new photo was uploaded, and there was a previous photo linked to the student
-                // (and the new photo ID is different from the old one, implies a replacement)
-                // This condition needs careful thought. 'currentPhotoFileId' is now the new photo's ID if an upload occurred.
-                // We need to know the *original* photo ID to delete it.
-                // Let's assume currentPhotoFileId correctly holds the ID of the photo to be associated with the profile.
-                // If a new photo was chosen, it's already uploaded and currentPhotoFileId reflects that.
-                // If the input was cleared, currentPhotoFileId is null.
-
-                // This part handles deletion of the OLD photo if a new one was uploaded, or if the user cleared the input.
-                // `photoIdToSave` is already set to `currentPhotoFileId` (which is updated during photoInput.change)
-                // If the user *replaced* an existing photo, currentPhotoFileId will now hold the ID of the *new* photo.
-                // To delete the *old* photo, we would need its ID *before* the new upload.
-                // Given the current structure, where photo upload happens on change, and `currentPhotoFileId` gets updated,
-                // we can assume `photoIdToSave` will correctly reflect the photo to save.
-                // The explicit deletion of the *old* photo if a *new* one was uploaded is complex without tracking original photoId.
-                // For simplicity, we assume `currentPhotoFileId` (and thus `photoIdToSave`) always reflects the desired state.
-                // The main concern is ensuring `photoIdToSave` is `null` if the user wants to remove the photo.
-                // The `photoInput.addEventListener('change')` now correctly sets `currentPhotoFileId = null`
-                // if the input is cleared (`photoInput.value === ''`).
 
                 const dataToUpdate = {
                     std: studentStd,
