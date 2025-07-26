@@ -22,13 +22,13 @@
 
         [data-theme="dark"] {
             /* Dark Theme */
-            --bg-color-dark: #1a1a1a; /* Black */
-            --text-color-dark: #e0d7cf; /* Light brown/cream for text */
+            --bg-color-dark: #101010; /* Black */
+            --text-color-dark: #d9a537; /* Light brown/cream for text */
             --accent-color-dark: #d2b48c; /* Tan/light brown for general accents/headings */
-            --card-bg-dark: #2c2c2c; /* Dark grey for cards */
-            --header-footer-bg-dark: #3a3a3a; /* Darker grey for header and footer */
+            --card-bg-dark: #cea614; /* Dark grey for cards */
+            --header-footer-bg-dark: #2671cc; /* Darker grey for header and footer */
             --border-color-dark: #555; /* Darker border */
-            --login-btn-bg-dark: #007bff; /* Blue for login button */
+            --login-btn-bg-dark: #13375e; /* Blue for login button */
             --login-btn-text-dark: white; /* White text for login button */
         }
 
@@ -52,7 +52,7 @@
         .header {
             background-color: var(--header-footer-bg-light); /* Default to light theme header */
             color: white; /* Header text usually remains white for contrast */
-            padding: 15px 20px;
+            padding: 5px 5px;
             display: flex;
             justify-content: center; /* Center the logo */
             align-items: center;
@@ -67,7 +67,7 @@
             background: none;
             border: 1px solid var(--text-color-light); /* Border color based on theme text color */
             color: var(--text-color-light); /* Icon color based on theme text color */
-            padding: 8px 12px;
+            padding: 10px 10px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 1em;
@@ -91,15 +91,15 @@
             width: 100%;
             height: auto;
             display: block; /* Ensures no extra space below image */
-            margin-bottom: 20px;
+            margin-bottom: 5px;
         }
 
         .container {
             width: 100%; /* Take full width */
-            padding: 20px; /* Add padding for content */
+            padding: 5px; /* Add padding for content */
             box-sizing: border-box; /* Include padding in width */
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: 5px;
+            margin-bottom: 5px;
             background-color: var(--card-bg-light); /* Default to light theme card bg */
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -111,8 +111,8 @@
         }
 
         .content-section {
-            margin-bottom: 30px;
-            padding: 20px;
+            margin-bottom: 5px;
+            padding: 5px;
             border: 1px solid var(--border-color-light); /* Default to light theme border */
             border-radius: 8px;
             background-color: var(--card-bg-light); /* Default to light theme card bg */
@@ -126,8 +126,8 @@
         .content-section h2 {
             color: var(--accent-color-light); /* Default to light theme heading */
             border-bottom: 2px solid var(--accent-color-light);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
             transition: color 0.3s ease, border-color 0.3s ease;
         }
         [data-theme="dark"] .content-section h2 {
@@ -137,7 +137,7 @@
 
         .contact-info {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             line-height: 1.6;
             font-size: 1.1em;
         }
@@ -148,11 +148,11 @@
         .fees-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 5px;
         }
         .fees-table th, .fees-table td {
             border: 1px solid var(--border-color-light);
-            padding: 10px;
+            padding: 5px;
             text-align: left;
         }
         [data-theme="dark"] .fees-table th, [data-theme="dark"] .fees-table td {
@@ -172,9 +172,9 @@
             padding: 0;
         }
         .features-list li {
-            margin-bottom: 8px;
+            margin-bottom:58px;
             position: relative;
-            padding-left: 25px;
+            padding-left: 5px;
         }
         .features-list li::before {
             content: "\f00c"; /* Font Awesome check icon */
@@ -194,12 +194,12 @@
             margin-top: auto; /* Push footer to the bottom */
             background-color: var(--header-footer-bg-light); /* Same as header background */
             color: white;
-            padding: 20px;
+            padding: 5px;
             text-align: center;
             display: flex;
             justify-content: center; /* Center the buttons */
             align-items: center;
-            gap: 20px; /* Space between buttons */
+            gap: 5px; /* Space between buttons */
             flex-wrap: wrap; /* Allow wrapping on small screens */
         }
         [data-theme="dark"] .footer {
