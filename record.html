@@ -22,6 +22,10 @@
             --paid-row-bg-light: #e6ffe6; /* Light green background */
             --unpaid-overdue-text-light: red;
             --unpaid-overdue-bg-light: #ffe6e6; /* Light red background */
+
+            /* New variables for pending fees statement */
+            --pending-fees-text-red: red;
+            --pending-fees-text-green: green;
         }
 
         [data-theme="dark"] {
@@ -40,6 +44,10 @@
             --paid-row-bg-dark: #1a331a; /* Darker green background */
             --unpaid-overdue-text-dark: #FF6347; /* Tomato red text for dark theme */
             --unpaid-overdue-bg-dark: #331a1a; /* Darker red background */
+
+            /* New variables for pending fees statement */
+            --pending-fees-text-red: #FF6347; /* Tomato red for dark theme */
+            --pending-fees-text-green: #90EE90; /* Light green for dark theme */
         }
 
         body {
@@ -154,7 +162,7 @@
             font-weight: bold;
         }
 
-        /* New styles for upcoming due dates (entire row) */
+        /* Styles for upcoming due dates (entire row) */
         .upcoming-due td { /* Apply to cells within the row */
             color: var(--upcoming-text-light); /* Dull/light text color */
             background-color: var(--upcoming-bg-light); /* Light background for the row */
@@ -182,6 +190,23 @@
         [data-theme="dark"] .unpaid-overdue-row td {
             color: var(--unpaid-overdue-text-dark);
             background-color: var(--unpaid-overdue-bg-dark);
+        }
+
+        /* Styles for pending fees statement */
+        #pendingFeesStatement {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #pendingFeesStatement.red-text {
+            color: var(--pending-fees-text-red);
+        }
+
+        #pendingFeesStatement.green-text {
+            color: var(--pending-fees-text-green);
         }
 
         .complete-profile-section {
@@ -265,6 +290,7 @@
                 <tbody id="feesTableBody">
                     </tbody>
             </table>
+            <div id="pendingFeesStatement"></div>
         </div>
     </div>
 
@@ -334,6 +360,8 @@
             const completeProfileSection = document.getElementById('complete-profile-section');
             const studentDetailsSection = document.getElementById('student-details-section');
             const feesDetailsSection = document.getElementById('fees-details-section');
+            const pendingFeesStatement = document.getElementById('pendingFeesStatement');
+
 
             loadingSpinner.style.display = 'block'; // Show loading spinner
 
@@ -402,8 +430,11 @@
 
                     // --- Populate Fees Details ---
                     document.getElementById('joiningDate').textContent = studentData.joinDate || 'N/A';
-                    document.getElementById('monthlyFees').textContent = studentData.fees ? studentData.fees.toFixed(2) : 'N/A';
-                    document.getElementById('discountedFees').textContent = studentData.disFees ? studentData.disFees.toFixed(2) : 'N/A';
+                    const monthlyFees = studentData.fees !== undefined && studentData.fees !== null ? parseFloat(studentData.fees) : null;
+                    const discountedFees = studentData.disFees !== undefined && studentData.disFees !== null ? parseFloat(studentData.disFees) : null;
+
+                    document.getElementById('monthlyFees').textContent = monthlyFees !== null ? monthlyFees.toFixed(2) : 'N/A';
+                    document.getElementById('discountedFees').textContent = discountedFees !== null ? discountedFees.toFixed(2) : 'N/A';
 
 
                     const feesTableBody = document.getElementById('feesTableBody');
@@ -429,6 +460,8 @@
 
                     const today = new Date();
                     today.setHours(0, 0, 0, 0); // Normalize today's date to start of day for accurate comparison
+
+                    let pendingMonthsCount = 0; // Initialize counter for pending months
 
                     academicMonths.forEach(monthYear => {
                         const row = feesTableBody.insertRow();
@@ -460,14 +493,6 @@
                                 }
 
                                 calculatedDueDateObj = new Date(nextYear, nextMonthIndex, joinDay);
-                                // Ensure the date is valid and not overflowing (e.g., Feb 30 becomes Mar 2)
-                                // If the day set is greater than the max days in the month,
-                                // the Date object will automatically roll over to the next month.
-                                // We need the due date to be capped at the last day of the target month
-                                // if the joinDay is too high (e.g., 31st for February).
-                                // Let's simplify: the prompt implies taking the 'DD' and 'MM+1' for the next month.
-                                // If joinDay (DD) is 31 and next month is Feb, it should still be Feb 28/29.
-                                // The current Date constructor behavior for overflow is acceptable based on the prompt.
 
                                 const dd = String(calculatedDueDateObj.getDate()).padStart(2, '0');
                                 const mm = String(calculatedDueDateObj.getMonth() + 1).padStart(2, '0');
@@ -484,22 +509,36 @@
                             const paymentDateString = paidDates[paidIndex];
                             const paymentDate = parseDMYtoDate(paymentDateString);
                             dateOfPaymentCell.textContent = paymentDate ? paymentDate.toLocaleDateString() : 'Invalid Date';
-                            row.classList.add('paid-row'); // Apply green color to entire row if paid
+                            row.classList.add('paid-row');
                         } else {
                             statusCell.textContent = 'Unpaid';
                             statusCell.classList.add('status-unpaid');
                             dateOfPaymentCell.textContent = '-';
 
-                            // Logic for unpaid rows based on due date
                             if (calculatedDueDateObj) {
                                 if (calculatedDueDateObj <= today) {
-                                    row.classList.add('unpaid-overdue-row'); // Red if unpaid and overdue/due today
+                                    row.classList.add('unpaid-overdue-row');
+                                    pendingMonthsCount++; // Increment if unpaid and overdue/due today
                                 } else {
-                                    row.classList.add('upcoming-due'); // Dull if unpaid and not yet due
+                                    row.classList.add('upcoming-due');
                                 }
                             }
                         }
                     });
+
+                    // --- Populate Pending Fees Statement ---
+                    if (pendingMonthsCount > 0) {
+                        const effectiveFees = Math.min(monthlyFees || Infinity, discountedFees || Infinity);
+                        const totalPendingAmount = effectiveFees !== Infinity ? (pendingMonthsCount * effectiveFees).toFixed(2) : 'N/A';
+                        pendingFeesStatement.textContent = `Your ${pendingMonthsCount} month(s) fees ₹${totalPendingAmount} is pending.`;
+                        pendingFeesStatement.classList.add('red-text');
+                        pendingFeesStatement.classList.remove('green-text');
+                    } else {
+                        pendingFeesStatement.textContent = "You don't have any pending fees due.";
+                        pendingFeesStatement.classList.add('green-text');
+                        pendingFeesStatement.classList.remove('red-text');
+                    }
+
                 }
 
             } catch (error) {
