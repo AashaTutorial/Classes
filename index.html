@@ -12,22 +12,24 @@
             /* Light Theme (Default) */
             --bg-color-light: #f8f5f0; /* Off-white / light cream */
             --text-color-light: #4a3e36; /* Dark brown */
-            --accent-color-light: #8B4513; /* SaddleBrown for buttons/highlights */
+            --accent-color-light: #8B4513; /* SaddleBrown for general accents/headings */
             --card-bg-light: white;
-            --header-bg-light: #8B4513; /* Dark brown for header */
+            --header-footer-bg-light: #8B4513; /* Dark brown for header and footer */
             --border-color-light: #d1c5b8; /* Lighter brown for borders */
-            --heading-color-light: #8B4513; /* Dark brown for headings */
+            --login-btn-bg-light: #007bff; /* Blue for login button */
+            --login-btn-text-light: white; /* White text for login button */
         }
 
         [data-theme="dark"] {
             /* Dark Theme */
             --bg-color-dark: #1a1a1a; /* Black */
             --text-color-dark: #e0d7cf; /* Light brown/cream for text */
-            --accent-color-dark: #d2b48c; /* Tan/light brown for buttons/highlights */
+            --accent-color-dark: #d2b48c; /* Tan/light brown for general accents/headings */
             --card-bg-dark: #2c2c2c; /* Dark grey for cards */
-            --header-bg-dark: #3a3a3a; /* Darker grey for header */
+            --header-footer-bg-dark: #3a3a3a; /* Darker grey for header and footer */
             --border-color-dark: #555; /* Darker border */
-            --heading-color-dark: #d2b48c; /* Light brown for headings */
+            --login-btn-bg-dark: #007bff; /* Blue for login button */
+            --login-btn-text-dark: white; /* White text for login button */
         }
 
         body {
@@ -48,42 +50,16 @@
         }
 
         .header {
-            background-color: var(--header-bg-light); /* Default to light theme header */
+            background-color: var(--header-footer-bg-light); /* Default to light theme header */
             color: white; /* Header text usually remains white for contrast */
             padding: 15px 20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* Center the logo */
             align-items: center;
-            gap: 10px;
         }
 
         [data-theme="dark"] .header {
-            background-color: var(--header-bg-dark);
-        }
-
-        .header .logo-text {
-            margin: 0;
-            font-size: 2em;
-        }
-        /* Removed header-actions from here as buttons are moved to footer */
-        .header .login-btn { /* This style is now applied to the footer button */
-            background-color: white;
-            color: var(--accent-color-light); /* Default to light theme accent */
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            text-decoration: none;
-            display: inline-block;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        [data-theme="dark"] .header .login-btn {
-            background-color: var(--accent-color-dark);
-            color: var(--bg-color-dark); /* Black text on light brown button */
-        }
-        .header .login-btn:hover {
-            opacity: 0.9;
+            background-color: var(--header-footer-bg-dark);
         }
 
         /* Theming for the toggle button in the footer */
@@ -119,9 +95,11 @@
         }
 
         .container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
+            width: 100%; /* Take full width */
+            padding: 20px; /* Add padding for content */
+            box-sizing: border-box; /* Include padding in width */
+            margin-top: 20px;
+            margin-bottom: 20px;
             background-color: var(--card-bg-light); /* Default to light theme card bg */
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -146,15 +124,15 @@
         }
 
         .content-section h2 {
-            color: var(--heading-color-light); /* Default to light theme heading */
-            border-bottom: 2px solid var(--heading-color-light);
+            color: var(--accent-color-light); /* Default to light theme heading */
+            border-bottom: 2px solid var(--accent-color-light);
             padding-bottom: 10px;
             margin-bottom: 20px;
             transition: color 0.3s ease, border-color 0.3s ease;
         }
         [data-theme="dark"] .content-section h2 {
-            color: var(--heading-color-dark);
-            border-bottom-color: var(--heading-color-dark);
+            color: var(--accent-color-dark);
+            border-bottom-color: var(--accent-color-dark);
         }
 
         .contact-info {
@@ -214,7 +192,7 @@
 
         .footer {
             margin-top: auto; /* Push footer to the bottom */
-            background-color: var(--header-bg-light); /* Same as header background */
+            background-color: var(--header-footer-bg-light); /* Same as header background */
             color: white;
             padding: 20px;
             text-align: center;
@@ -225,12 +203,12 @@
             flex-wrap: wrap; /* Allow wrapping on small screens */
         }
         [data-theme="dark"] .footer {
-            background-color: var(--header-bg-dark);
+            background-color: var(--header-footer-bg-dark);
         }
 
         .footer .login-btn-large {
-            background-color: var(--accent-color-light);
-            color: white;
+            background-color: var(--login-btn-bg-light); /* Blue */
+            color: var(--login-btn-text-light); /* White */
             padding: 15px 30px; /* Bigger padding */
             border: none;
             border-radius: 8px; /* Slightly more rounded */
@@ -241,8 +219,8 @@
             transition: background-color 0.3s ease, transform 0.2s ease;
         }
         [data-theme="dark"] .footer .login-btn-large {
-            background-color: var(--accent-color-dark);
-            color: var(--bg-color-dark); /* Black text on light brown button */
+            background-color: var(--login-btn-bg-dark); /* Blue */
+            color: var(--login-btn-text-dark); /* White */
         }
         .footer .login-btn-large:hover {
             opacity: 0.9;
@@ -252,16 +230,10 @@
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .header {
-                flex-direction: column;
                 padding: 10px;
             }
-            .header .logo-text {
-                font-size: 1.8em;
-                margin-bottom: 10px;
-            }
             .container {
-                margin: 10px;
-                padding: 15px;
+                padding: 15px; /* Slightly less padding on small screens */
             }
             .contact-info {
                 font-size: 1em;
@@ -281,14 +253,14 @@
 </head>
 <body>
     <header class="header">
-        <h1 class="logo-text">Aasha Tutorial</h1>
-        </header>
+        <!-- Removed h1 as per request, logo will contain the name -->
+    </header>
 
     <main>
         <img src="logo.png" alt="Aasha Tutorial Logo" class="full-width-img">
 
         <div class="container">
-            <section class="contact-info">
+            <section class="contact-info content-section">
                 <p><strong>Address:</strong> This is sample address, I will update manually in code</p>
                 <p><strong>Contact Numbers:</strong> 1234567890, 0987654321</p>
             </section>
@@ -342,7 +314,7 @@
     <footer class="footer">
         <a href="login.html" class="login-btn-large">Student Login</a>
         <button id="themeToggle" class="theme-toggle-btn">
-            <i class="fas fa-moon"></i>
+            <i class="fas fa-sun"></i> <!-- Default to sun icon for light theme, indicating toggle to dark -->
         </button>
     </footer>
 
