@@ -52,7 +52,7 @@
         .header {
             background-color: var(--header-footer-bg-light); /* Default to light theme header */
             color: white; /* Header text usually remains white for contrast */
-            padding: 15px 20px;
+            padding: 5px 5px;
             display: flex;
             justify-content: center; /* Center the logo */
             align-items: center;
@@ -90,15 +90,15 @@
             width: 100%;
             height: auto;
             display: block; /* Ensures no extra space below image */
-            margin-bottom: 20px;
+            margin-bottom: 5px;
         }
 
         .container {
             width: 100%; /* Take full width */
-            padding: 20px; /* Add padding for content */
+            padding: 5px; /* Add padding for content */
             box-sizing: border-box; /* Include padding in width */
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: 5px;
+            margin-bottom: 5px;
             background-color: var(--card-bg-light); /* Default to light theme card bg */
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -110,8 +110,8 @@
         }
 
         .content-section {
-            margin-bottom: 30px;
-            padding: 20px;
+            margin-bottom: 5px;
+            padding: 5px;
             border: 1px solid var(--border-color-light); /* Default to light theme border */
             border-radius: 8px;
             background-color: var(--card-bg-light); /* Default to light theme card bg */
@@ -125,8 +125,8 @@
         .content-section h2 {
             color: var(--accent-color-light); /* Default to light theme heading */
             border-bottom: 2px solid var(--accent-color-light);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
             transition: color 0.3s ease, border-color 0.3s ease;
         }
         [data-theme="dark"] .content-section h2 {
@@ -136,7 +136,7 @@
 
         .contact-info {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
             line-height: 1.6;
             font-size: 1.1em;
         }
@@ -147,11 +147,11 @@
         .fees-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 5px;
         }
         .fees-table th, .fees-table td {
             border: 1px solid var(--border-color-light);
-            padding: 10px;
+            padding: 5px;
             text-align: left;
         }
         [data-theme="dark"] .fees-table th, [data-theme="dark"] .fees-table td {
@@ -173,7 +173,7 @@
         .features-list li {
             margin-bottom: 8px;
             position: relative;
-            padding-left: 25px;
+            padding-left: 10px;
         }
         .features-list li::before {
             content: "\f00c"; /* Font Awesome check icon */
@@ -195,7 +195,7 @@
             justify-content: center;
             align-items: center;
             gap: 15px; /* Space between buttons */
-            margin: 20px auto; /* Center the group and add vertical space */
+            margin: 10px auto; /* Center the group and add vertical space */
             max-width: 900px; /* Match container max-width */
             padding: 0 20px; /* Match container padding */
             box-sizing: border-box;
@@ -257,10 +257,10 @@
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .header {
-                padding: 10px;
+                padding: 5px;
             }
             .container {
-                padding: 15px; /* Slightly less padding on small screens */
+                padding: 5px; /* Slightly less padding on small screens */
             }
             .contact-info {
                 font-size: 1em;
@@ -286,16 +286,14 @@
 </head>
 <body>
     <header class="header">
-        <!-- Removed h1 as per request, logo will contain the name -->
+        <img src="logo.png" alt="Aasha Tutorial Logo" class="full-width-img">
     </header>
 
     <main>
-        <img src="logo.png" alt="Aasha Tutorial Logo" class="full-width-img">
-
         <div class="container">
             <section class="contact-info content-section">
-                <p><strong>Address:</strong> This is sample address, I will update manually in code</p>
-                <p><strong>Contact Numbers:</strong> 1234567890, 0987654321</p>
+                <p><strong>Address:</strong> Someshwar Nagar, Juchandra, Naigaon East, Palghar-401208</p>
+                <p><strong>Contact Numbers:</strong> 8976342567 / 8898073704 </p>
             </section>
 
             <!-- New button group section -->
@@ -337,13 +335,13 @@
 
             <section class="content-section">
                 <h2>Why Choose Aasha Tutorial?</h2>
-                <p>At Aasha Tutorial, we are committed to nurturing young minds and building a strong academic foundation. Here’s why students thrive with us:</p>
+                <p>At Aasha Tutorial, we are committed to nurturing young minds and building a strong academic foundation. <br>
+                    Here’s why students thrive with us:</p>
                 <ul class="features-list">
                     <li>Experienced and passionate educators dedicated to student success.</li>
                     <li>Small batch sizes ensuring personalized attention and interactive learning.</li>
                     <li>Comprehensive curriculum covering all core subjects with clarity.</li>
                     <li>Regular assessments to track progress and identify areas for improvement.</li>
-                    <li>Dedicated doubt-clearing sessions to ensure no student is left behind.</li>
                     <li>A supportive and encouraging environment that fosters a love for learning.</li>
                     <li>Focus on conceptual understanding rather than rote memorization.</li>
                     <li>Proven track record of students achieving excellent results.</li>
@@ -351,8 +349,6 @@
             </section>
         </div>
     </main>
-
-    <!-- Removed footer as buttons are moved -->
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
