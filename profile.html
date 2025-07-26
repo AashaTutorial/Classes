@@ -205,16 +205,13 @@
                 <p style="font-size: 0.8em; color: gray; margin-top: 5px;">Upload a clear photo (PNG, JPG, JPEG). Leave blank to remove existing photo.</p>
                 <img id="currentPhotoPreview" src="#" alt="Current Photo" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none;">
             </div>
-
             <div class="button-group">
                 <button type="submit">Save Profile</button>
                 <button type="button" onclick="window.location.href='record.html'">Back to Record</button>
             </div>
-
             <div id="message"></div>
         </form>
     </div>
-
     <script>
         // Appwrite Client Initialization
         const client = new Appwrite.Client();
@@ -237,36 +234,33 @@
             if (theme === 'dark') {
                 body.setAttribute('data-theme', 'dark');
             } else {
-                body.removeAttribute('data-theme');
+                body.removeAttribute('data-theme'); // Remove data-theme for default (light)
             }
-            // Theme preference is usually loaded once on index/record and persists.
-            // No need to save theme here, as this page doesn't have a theme toggle.
+        }
+
+        // Load saved theme on initial page load
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            applyTheme('light'); // Default to light theme if no saved theme
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Load saved theme on initial page load
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                applyTheme(savedTheme);
-            } else {
-                applyTheme('light'); // Default to light theme if no saved theme
-            }
+            const studentNameInput = document.getElementById('studentName');
+            const studentIdInput = document.getElementById('studentId');
+            const stdInput = document.getElementById('std');
+            const dobInput = document.getElementById('dob');
+            const mobInput = document.getElementById('mob');
+            const schoolInput = document.getElementById('school');
+            const addressInput = document.getElementById('address');
+            const photoInput = document.getElementById('photo');
+            const currentPhotoPreview = document.getElementById('currentPhotoPreview');
+            const profileForm = document.getElementById('profileForm');
+            const messageDiv = document.getElementById('message');
 
             const loggedInStudentId = sessionStorage.getItem('loggedInStudentId');
             const loggedInStudentName = sessionStorage.getItem('loggedInStudentName');
-            const profileForm = document.getElementById('profileForm');
-            const studentNameInput = document.getElementById('studentName');
-            const studentIdInput = document.getElementById('studentId');
-            const photoInput = document.getElementById('photo'); // Get reference to photo file input
-            const currentPhotoPreview = document.getElementById('currentPhotoPreview');
-
-            // Form field references
-            const stdField = document.getElementById('std');
-            const dobField = document.getElementById('dob');
-            const mobField = document.getElementById('mob');
-            const schoolField = document.getElementById('school');
-            const addressField = document.getElementById('address');
-
 
             if (!loggedInStudentId || !loggedInStudentName) {
                 alert('Please log in to complete your profile.');
@@ -277,9 +271,10 @@
             studentNameInput.value = loggedInStudentName;
             studentIdInput.value = loggedInStudentId;
 
-            let studentDocumentId = null;
-            let currentPhotoFileId = null; // To store the existing photo ID
+            let studentDocumentId = null; // To store the Appwrite document ID
+            let currentPhotoFileId = null; // To store the current photo's file ID
 
+            // Fetch existing student data
             try {
                 const response = await databases.listDocuments(
                     DATABASE_ID,
@@ -293,116 +288,112 @@
                 if (response.documents.length > 0) {
                     const studentData = response.documents[0];
                     studentDocumentId = studentData.$id;
+                    stdInput.value = studentData.std || '';
+                    dobInput.value = studentData.dob || ''; // Assumes DOB is stored in YYYY-MM-DD format
+                    mobInput.value = studentData.mob || '';
+                    schoolInput.value = studentData.school || '';
+                    addressInput.value = studentData.add || '';
+                    currentPhotoFileId = studentData.photoId || null;
 
-                    // Populate form fields with existing data
-                    stdField.value = studentData.std || '';
-                    dobField.value = studentData.dob || ''; // Assumes YYYY-MM-DD format from Appwrite or empty
-                    mobField.value = studentData.mob || '';
-                    schoolField.value = studentData.school || '';
-                    addressField.value = studentData.add || ''; // 'add' from Appwrite attribute
-
-                    // Display current photo if available and valid
-                    if (studentData.photoId) { // Simplified check as per your request
-                        currentPhotoFileId = studentData.photoId;
-                        // Use getFilePreview for displaying images
-                        const fileUrl = storage.getFilePreview(BUCKET_ID, currentPhotoFileId);
-                        currentPhotoPreview.src = fileUrl;
-                        currentPhotoPreview.style.display = 'block';
-                    } else {
-                        currentPhotoPreview.src = ''; // Clear src if no photo
-                        currentPhotoPreview.style.display = 'none'; // Hide preview
+                    if (currentPhotoFileId) {
+                        try {
+                            const filePreview = storage.getFileView(BUCKET_ID, currentPhotoFileId);
+                            currentPhotoPreview.src = filePreview.href;
+                            currentPhotoPreview.style.display = 'block';
+                        } catch (fileError) {
+                            console.warn('Could not load photo preview:', fileError);
+                            currentPhotoPreview.style.display = 'none';
+                        }
                     }
                 }
             } catch (error) {
-                console.error("Error fetching existing profile data:", error);
-                displayMessage('Failed to load existing profile data. Some fields might be empty.', 'error');
+                console.error("Error fetching student data:", error);
+                displayMessage('Failed to load existing profile data. Please try again.', 'error');
             }
 
             profileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-
-                // Retrieve all field values (excluding joinDate, fees, disFees)
-                const std = stdField.value;
-                const dob = dobField.value;
-                const mob = mobField.value;
-                const school = schoolField.value;
-                const address = addressField.value;
-                const photoFile = photoInput.files[0];
-
-                // Simple validation for required fields (excluding joinDate, fees, disFees)
-                if (!std || !dob || !mob || !school || !address) {
-                    displayMessage('Please fill in all required fields (Standard, DOB, Mobile, School, Address).', 'error');
-                    return;
-                }
-
                 displayMessage('Saving profile...', 'info');
 
-                let photoIdToSave = currentPhotoFileId; // Assume existing photo unless new one is uploaded
+                const studentStd = stdInput.value.trim();
+                const studentDob = dobInput.value;
+                const studentMob = mobInput.value.trim();
+                const studentSchool = schoolInput.value.trim();
+                const studentAddress = addressInput.value.trim();
+                const photoFile = photoInput.files[0];
 
-                try {
-                    if (photoFile) {
-                        // If a new photo is uploaded, delete old one first if it exists
-                        if (currentPhotoFileId) {
-                            try {
-                                await storage.deleteFile(BUCKET_ID, currentPhotoFileId);
-                                console.log("Old photo deleted successfully.");
-                            } catch (deleteError) {
-                                console.warn("Could not delete old photo (might not exist or permission issue):", deleteError);
-                            }
-                        }
+                let photoIdToSave = currentPhotoFileId; // Default to existing photo ID
 
+                // Handle photo upload/removal
+                if (photoFile) {
+                    try {
                         // Upload new photo
                         const uploadedFile = await storage.createFile(
                             BUCKET_ID,
-                            ID.unique(), // Generate unique ID for the new file
+                            ID.unique(),
                             photoFile
                         );
                         photoIdToSave = uploadedFile.$id;
-                    } else if (currentPhotoFileId && photoInput.value === '') {
-                        // If photo input is cleared and there was an existing photo
-                        try {
-                            await storage.deleteFile(BUCKET_ID, currentPhotoFileId);
-                            console.log("Existing photo removed successfully from storage.");
-                        } catch (deleteError) {
-                            console.warn("Could not delete existing photo on clear (might not exist or permission issue):", deleteError);
+
+                        // If there was an old photo, delete it
+                        if (currentPhotoFileId) {
+                            try {
+                                await storage.deleteFile(BUCKET_ID, currentPhotoFileId);
+                                console.log('Old photo deleted successfully.');
+                            } catch (deleteError) {
+                                console.warn('Could not delete old photo:', deleteError);
+                            }
                         }
-                        photoIdToSave = null; // Set photo ID to null for the document
+                    } catch (uploadError) {
+                        console.error("Error uploading photo:", uploadError);
+                        displayMessage('Failed to upload photo. Please try again.', 'error');
+                        return;
                     }
-                    // If no new photo and no existing photo, photoIdToSave remains null
+                } else if (photoInput.value === '' && currentPhotoFileId) {
+                    // User cleared the file input and there was an existing photo
+                    try {
+                        await storage.deleteFile(BUCKET_ID, currentPhotoFileId);
+                        photoIdToSave = null; // Set to null as no photo is linked now
+                        console.log('Photo removed successfully.');
+                    } catch (deleteError) {
+                        console.warn('Could not remove photo:', deleteError);
+                        // Still proceed with saving other profile data even if photo deletion fails
+                    }
+                }
 
-                    const dataToUpdate = {
-                        std: std,
-                        dob: dob,
-                        mob: mob,
-                        school: school,
-                        add: address, // 'add' in Appwrite corresponds to 'address' here
-                        photoId: photoIdToSave // Save the new photo ID, or null if no photo
-                    };
+                const dataToUpdate = {
+                    std: studentStd,
+                    dob: studentDob,
+                    mob: studentMob, // Changed from parseFloat(studentMob)
+                    school: studentSchool,
+                    add: studentAddress,
+                    photoId: photoIdToSave, // Save the new or existing photo ID
+                };
 
-                    // If studentDocumentId is not yet set (should be from initial fetch, but as a fallback)
+                try {
                     if (!studentDocumentId) {
-                        const response = await databases.listDocuments(
+                        // Create a new document if it doesn't exist
+                        // This case should ideally be handled during login/initial record creation,
+                        // but included as a fallback.
+                        await databases.createDocument(
                             DATABASE_ID,
                             COLLECTION_ID,
-                            [
-                                Query.equal('id', loggedInStudentId),
-                                Query.limit(1)
-                            ]
+                            ID.unique(), // Let Appwrite generate a unique ID for the document
+                            {
+                                id: loggedInStudentId, // Link by student ID
+                                name: loggedInStudentName,
+                                ...dataToUpdate
+                            }
                         );
-                        if (response.documents.length > 0) {
-                            studentDocumentId = response.documents[0].$id;
-                        } else {
-                            displayMessage('Could not find existing record to update. Please contact support.', 'error');
-                            return;
-                        }
+                    } else {
+                        // Update existing document
+                        await databases.updateDocument(
+                            DATABASE_ID,
+                            COLLECTION_ID,
+                            studentDocumentId,
+                            dataToUpdate
+                        );
                     }
-
-                    await databases.updateDocument(
-                        DATABASE_ID,
-                        COLLECTION_ID,
-                        studentDocumentId,
-                        dataToUpdate
-                    );
 
                     displayMessage('Profile updated successfully!', 'success');
                     // Update currentPhotoFileId after successful save
