@@ -5,6 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login - Aasha Tutorial</title>
     <style>
+        /* Theme Variables */
+        :root {
+            /* Light Theme (Default: Warm Brown & Cream) */
+            --bg-color-light: #FDF8F5; /* Very light cream/off-white */
+            --text-color-light: #5A4A3C; /* Medium dark warm brown */
+            --accent-color-light: #A0522D; /* Sienna/Terracotta - a warm, inviting brown */
+            --card-bg-light: #FFFFFF; /* Pure White */
+            --header-footer-bg-light: #8B4513; /* SaddleBrown - a rich, classic brown */
+            --border-color-light: #D2B48C; /* Tan - a light, muted brown */
+            --login-btn-bg-light: #007bff; /* Blue for login button */
+            --login-btn-text-light: white; /* White text for login button */
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme (Deep Brown & Light Cream) */
+            --bg-color-dark: #2C2621; /* Very dark brown/charcoal with a brown tint */
+            --text-color-dark: #F5EFEA; /* Light cream/off-white for readability */
+            --accent-color-dark: #E6B88A; /* Light Gold/Tan - contrasting warm tone */
+            --card-bg-dark: #3A342E; /* Slightly lighter dark brown for cards */
+            --header-footer-bg-dark: #2C2621; /* Same as background for seamless dark look */
+            --border-color-dark: #5C524A; /* Medium dark brown */
+            --login-btn-bg-dark: #007bff; /* Blue for login button */
+            --login-btn-text-dark: white; /* White text for login button */
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -12,22 +37,39 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f0f2f5; /* Light grey background */
-            color: #333;
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+        [data-theme="dark"] body {
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+        }
+
         .login-container {
-            background-color: white;
+            background-color: var(--card-bg-light);
             padding: 40px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
             text-align: center;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
+        [data-theme="dark"] .login-container {
+            background-color: var(--card-bg-dark);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
         h2 {
-            color: #4CAF50; /* Green title */
+            color: var(--accent-color-light);
             margin-bottom: 30px;
+            transition: color 0.3s ease;
         }
+        [data-theme="dark"] h2 {
+            color: var(--accent-color-dark);
+        }
+
         .form-group {
             margin-bottom: 20px;
             text-align: left;
@@ -36,18 +78,32 @@
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
-            color: #555;
+            color: var(--text-color-light);
+            transition: color 0.3s ease;
         }
+        [data-theme="dark"] label {
+            color: var(--text-color-dark);
+        }
+
         input[type="text"] {
             width: calc(100% - 20px);
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color-light);
             border-radius: 4px;
             font-size: 1em;
+            background-color: var(--card-bg-light);
+            color: var(--text-color-light);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
+        [data-theme="dark"] input[type="text"] {
+            background-color: var(--card-bg-dark);
+            border-color: var(--border-color-dark);
+            color: var(--text-color-dark);
+        }
+
         .login-btn {
-            background-color: #4CAF50; /* Green button */
-            color: white;
+            background-color: var(--login-btn-bg-light);
+            color: var(--login-btn-text-light);
             padding: 12px 20px;
             border: none;
             border-radius: 4px;
@@ -56,42 +112,17 @@
             width: 100%;
             transition: background-color 0.3s ease;
         }
+        [data-theme="dark"] .login-btn {
+            background-color: var(--login-btn-bg-dark);
+            color: var(--login-btn-text-dark);
+        }
         .login-btn:hover {
-            background-color: #45a049; /* Darker green on hover */
+            opacity: 0.9;
         }
         #error-message {
             color: red;
             margin-top: 15px;
             font-size: 0.9em;
-        }
-
-        /* Dark Theme Adaptation */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #1a1a1a; /* Dark background */
-                color: #e0e0e0;
-            }
-            .login-container {
-                background-color: #2c2c2c; /* Darker card background */
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            }
-            h2 {
-                color: #81c784; /* Lighter green for dark theme */
-            }
-            label {
-                color: #ccc;
-            }
-            input[type="text"] {
-                background-color: #3a3a3a;
-                border-color: #555;
-                color: #e0e0e0;
-            }
-            .login-btn {
-                background-color: #4CAF50; /* Green button */
-            }
-            .login-btn:hover {
-                background-color: #388e3c; /* Darker green on hover */
-            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
@@ -124,45 +155,66 @@
         const DATABASE_ID = '685d0c85000aa071581a'; // Your Database ID
         const COLLECTION_ID = '68838ce2003da61468e0'; // Your Collection ID
 
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const studentName = document.getElementById('studentName').value.trim();
-            const studentId = document.getElementById('studentId').value.trim();
-            const errorMessage = document.getElementById('error-message');
+        // Function to apply theme
+        function applyTheme(theme) {
+            const body = document.body;
+            if (theme === 'dark') {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // Remove data-theme for default (light)
+            }
+            localStorage.setItem('theme', theme); // Save preference
+        }
 
-            errorMessage.textContent = ''; // Clear previous errors
-
-            if (!studentName || !studentId) {
-                errorMessage.textContent = 'Please enter both full name and student ID.';
-                return;
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load saved theme on initial page load
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else {
+                applyTheme('light'); // Default to light theme if no saved theme
             }
 
-            try {
-                // Query Appwrite for a document matching both name and id
-                const response = await databases.listDocuments(
-                    DATABASE_ID,
-                    COLLECTION_ID,
-                    [
-                        Query.equal('id', studentId),
-                        Query.equal('name', studentName),
-                        Query.limit(1) // Expecting only one match
-                    ]
-                );
+            document.getElementById('loginBtn').addEventListener('click', async () => {
+                const studentName = document.getElementById('studentName').value.trim();
+                const studentId = document.getElementById('studentId').value.trim();
+                const errorMessage = document.getElementById('error-message');
 
-                if (response.documents.length > 0) {
-                    // Login successful
-                    const studentData = response.documents[0];
-                    // Store student ID in session storage for access on record.html and profile.html
-                    sessionStorage.setItem('loggedInStudentId', studentId);
-                    sessionStorage.setItem('loggedInStudentName', studentName); // Store name too
+                errorMessage.textContent = ''; // Clear previous errors
 
-                    window.location.href = 'record.html'; // Redirect to record page
-                } else {
-                    errorMessage.textContent = 'Invalid Name or Student ID.';
+                if (!studentName || !studentId) {
+                    errorMessage.textContent = 'Please enter both full name and student ID.';
+                    return;
                 }
-            } catch (error) {
-                console.error("Login error:", error);
-                errorMessage.textContent = 'An error occurred during login. Please try again later.';
-            }
+
+                try {
+                    // Query Appwrite for a document matching both name and id
+                    const response = await databases.listDocuments(
+                        DATABASE_ID,
+                        COLLECTION_ID,
+                        [
+                            Query.equal('id', studentId),
+                            Query.equal('name', studentName),
+                            Query.limit(1) // Expecting only one match
+                        ]
+                    );
+
+                    if (response.documents.length > 0) {
+                        // Login successful
+                        const studentData = response.documents[0];
+                        // Store student ID in session storage for access on record.html and profile.html
+                        sessionStorage.setItem('loggedInStudentId', studentId);
+                        sessionStorage.setItem('loggedInStudentName', studentName); // Store name too
+
+                        window.location.href = 'record.html'; // Redirect to record page
+                    } else {
+                        errorMessage.textContent = 'Invalid Name or Student ID.';
+                    }
+                } catch (error) {
+                    console.error("Login error:", error);
+                    errorMessage.textContent = 'An error occurred during login. Please try again later.';
+                }
+            });
         });
     </script>
 </body>
