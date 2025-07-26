@@ -16,6 +16,8 @@
             --border-color-light: #D2B48C; /* Tan - a light, muted brown */
             --login-btn-bg-light: #007bff; /* Blue for login button */
             --login-btn-text-light: white; /* White text for login button */
+            --upcoming-text-light: #A8A8A8; /* Light gray for upcoming fees in light theme */
+            --upcoming-bg-light: #F5F5F5; /* Slightly darker background for upcoming rows in light theme */
         }
 
         [data-theme="dark"] {
@@ -28,6 +30,8 @@
             --border-color-dark: #5C524A; /* Medium dark brown */
             --login-btn-bg-dark: #007bff; /* Blue for login button */
             --login-btn-text-dark: white; /* White text for login button */
+            --upcoming-text-dark: #777; /* Darker gray for upcoming fees in dark theme */
+            --upcoming-bg-dark: #323232; /* Slightly lighter background for upcoming rows in dark theme */
         }
 
         body {
@@ -139,8 +143,19 @@
             color: green;
         }
         .status-unpaid {
-            color: grey;
+            color: red;
         }
+
+        /* New styles for upcoming due dates */
+        .upcoming-due {
+            color: var(--upcoming-text-light); /* Dull/light text color */
+            background-color: var(--upcoming-bg-light); /* Light background for the row */
+        }
+        [data-theme="dark"] .upcoming-due {
+            color: var(--upcoming-text-dark); /* Dull/light text color for dark theme */
+            background-color: var(--upcoming-bg-dark); /* Lighter background for the row in dark theme */
+        }
+
         .complete-profile-section {
             text-align: center;
             padding: 20px;
@@ -388,6 +403,9 @@
 
                     feesTableBody.innerHTML = ''; // Clear existing rows
 
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Normalize today's date to start of day for accurate comparison
+
                     academicMonths.forEach(monthYear => {
                         const row = feesTableBody.insertRow();
                         const monthCell = row.insertCell();
@@ -398,7 +416,9 @@
                         monthCell.textContent = monthYear;
 
                         // Calculate Due Date
-                        let dueDate = 'N/A';
+                        let dueDateStr = 'N/A';
+                        let calculatedDueDateObj = null; // Store Date object for comparison
+
                         if (joinDay) {
                             const monthNames = ["January", "February", "March", "April", "May", "June",
                                                 "July", "August", "September", "October", "November", "December"];
@@ -416,17 +436,21 @@
                                 }
 
                                 // Create a date object for the next month with the joinDay
-                                // Note: Date constructor handles day overflow automatically (e.g., Feb 30 becomes Mar 2)
-                                const calculatedDueDate = new Date(nextYear, nextMonthIndex, joinDay);
+                                calculatedDueDateObj = new Date(nextYear, nextMonthIndex, joinDay);
 
                                 // Format as DD/MM/YYYY
-                                const dd = String(calculatedDueDate.getDate()).padStart(2, '0');
-                                const mm = String(calculatedDueDate.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-                                const yyyy = calculatedDueDate.getFullYear();
-                                dueDate = `${dd}/${mm}/${yyyy}`;
+                                const dd = String(calculatedDueDateObj.getDate()).padStart(2, '0');
+                                const mm = String(calculatedDueDateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                                const yyyy = calculatedDueDateObj.getFullYear();
+                                dueDateStr = `${dd}/${mm}/${yyyy}`;
                             }
                         }
-                        dueDateCell.textContent = dueDate;
+                        dueDateCell.textContent = dueDateStr;
+
+                        // Apply dull color if due date is in the future
+                        if (calculatedDueDateObj && calculatedDueDateObj > today) {
+                            row.classList.add('upcoming-due');
+                        }
 
 
                         const paidIndex = paidMonths.indexOf(monthYear);
