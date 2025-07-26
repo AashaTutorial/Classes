@@ -208,13 +208,16 @@
 
         <div id="fees-details-section" class="fees-section" style="display: none;">
             <h2>Fees Details</h2>
+            <p><strong>Joining Date:</strong> <span id="joiningDate"></span></p>
             <p><strong>Monthly Fees:</strong> ₹<span id="monthlyFees"></span></p>
+            <p><strong>Discounted Fees:</strong> ₹<span id="discountedFees"></span></p>
             <h3>Fees Card (June 2025 - April 2026)</h3>
             <table class="fees-table">
                 <thead>
                     <tr>
                         <th>Month</th>
                         <th>Status</th>
+                        <th>Due Date</th>
                         <th>Date of Payment</th>
                     </tr>
                 </thead>
@@ -314,14 +317,17 @@
 
                 // --- Profile Completion Check ---
                 let isProfileComplete = true;
-                const attributesToCheck = ['std', 'dob', 'mob', 'school', 'add', 'photoId']; // Exclude name, id, fees, paidMonth, paidDate
+                // Added 'joinDate' and 'disFees' to the check
+                const attributesToCheck = ['std', 'dob', 'mob', 'school', 'add', 'photoId', 'joinDate', 'fees', 'disFees'];
 
                 for (const attr of attributesToCheck) {
-                    if (!studentData[attr] || studentData[attr] === '') {
+                    // Consider 0 as a valid value for fees/disFees, so check for null/undefined/empty string
+                    if (studentData[attr] === undefined || studentData[attr] === null || studentData[attr] === '') {
                         isProfileComplete = false;
                         break;
                     }
                 }
+
 
                 if (!isProfileComplete) {
                     studentDetailsSection.style.display = 'none';
@@ -357,13 +363,24 @@
                         document.getElementById('studentPhoto').src = 'placeholder.jpg'; // Default placeholder
                     }
 
-
                     // --- Populate Fees Details ---
+                    document.getElementById('joiningDate').textContent = studentData.joinDate || 'N/A';
                     document.getElementById('monthlyFees').textContent = studentData.fees ? studentData.fees.toFixed(2) : 'N/A';
+                    document.getElementById('discountedFees').textContent = studentData.disFees ? studentData.disFees.toFixed(2) : 'N/A';
+
 
                     const feesTableBody = document.getElementById('feesTableBody');
                     const paidMonths = studentData.paidMonth || []; // Array of paid month names (e.g., ["June 2025", "July 2025"])
                     const paidDates = studentData.paidDate || []; // Array of payment dates
+                    const joinDateStr = studentData.joinDate;
+                    let joinDay = null;
+
+                    if (joinDateStr) {
+                        const parts = joinDateStr.split('/');
+                        if (parts.length === 3) {
+                            joinDay = parseInt(parts[0], 10);
+                        }
+                    }
 
                     const academicMonths = [
                         "June 2025", "July 2025", "August 2025", "September 2025", "October 2025",
@@ -373,26 +390,58 @@
 
                     feesTableBody.innerHTML = ''; // Clear existing rows
 
-                    academicMonths.forEach(month => {
+                    academicMonths.forEach(monthYear => {
                         const row = feesTableBody.insertRow();
                         const monthCell = row.insertCell();
                         const statusCell = row.insertCell();
-                        const dateCell = row.insertCell();
+                        const dueDateCell = row.insertCell(); // New cell for Due Date
+                        const dateOfPaymentCell = row.insertCell();
 
-                        monthCell.textContent = month;
+                        monthCell.textContent = monthYear;
 
-                        const paidIndex = paidMonths.indexOf(month);
+                        // Calculate Due Date
+                        let dueDate = 'N/A';
+                        if (joinDay) {
+                            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                                "July", "August", "September", "October", "November", "December"];
+                            const [monthName, yearStr] = monthYear.split(' ');
+                            const currentMonthIndex = monthNames.indexOf(monthName);
+                            const currentYear = parseInt(yearStr, 10);
+
+                            if (currentMonthIndex !== -1) {
+                                let nextMonthIndex = currentMonthIndex + 1;
+                                let nextYear = currentYear;
+
+                                if (nextMonthIndex > 11) { // If month rolls over to next year (e.g., Dec -> Jan)
+                                    nextMonthIndex = 0; // January
+                                    nextYear++;
+                                }
+
+                                // Create a date object for the next month with the joinDay
+                                // Note: Date constructor handles day overflow automatically (e.g., Feb 30 becomes Mar 2)
+                                const calculatedDueDate = new Date(nextYear, nextMonthIndex, joinDay);
+
+                                // Format as DD/MM/YYYY
+                                const dd = String(calculatedDueDate.getDate()).padStart(2, '0');
+                                const mm = String(calculatedDueDate.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                                const yyyy = calculatedDueDate.getFullYear();
+                                dueDate = `${dd}/${mm}/${yyyy}`;
+                            }
+                        }
+                        dueDateCell.textContent = dueDate;
+
+
+                        const paidIndex = paidMonths.indexOf(monthYear);
                         if (paidIndex !== -1) {
                             statusCell.textContent = 'Paid';
                             statusCell.classList.add('status-paid');
                             const paymentDateString = paidDates[paidIndex];
-                            // Use the new parseDMYtoDate function here
                             const paymentDate = parseDMYtoDate(paymentDateString);
-                            dateCell.textContent = paymentDate ? paymentDate.toLocaleDateString() : 'Invalid Date';
+                            dateOfPaymentCell.textContent = paymentDate ? paymentDate.toLocaleDateString() : 'Invalid Date';
                         } else {
                             statusCell.textContent = 'Unpaid';
                             statusCell.classList.add('status-unpaid');
-                            dateCell.textContent = '-';
+                            dateOfPaymentCell.textContent = '-';
                         }
                     });
                 }
