@@ -13,7 +13,6 @@
             --accent-color-light: #A0522D; /* Sienna/Terracotta - a warm, inviting brown */
             --card-bg-light: #FFFFFF; /* Pure White */
             --header-footer-bg-light: #8B4513; /* SaddleBrown - a rich, classic brown */
-            --border-color-light: #D2B48C; /* Tan - a light, muted brown */
             --login-btn-bg-light: #007bff; /* Blue for login button */
             --login-btn-text-light: white; /* White text for login button */
         }
@@ -37,7 +36,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: var(--bg-color-light);
+            background-color: var(--bg-color-light); /* Light grey background */
             color: var(--text-color-light);
             transition: background-color 0.3s ease, color 0.3s ease;
         }
@@ -62,7 +61,7 @@
         }
 
         h2 {
-            color: var(--accent-color-light);
+            color: var(--accent-color-light); /* Green title */
             margin-bottom: 30px;
             transition: color 0.3s ease;
         }
@@ -85,42 +84,45 @@
             color: var(--text-color-dark);
         }
 
-        input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
             border: 1px solid var(--border-color-light);
-            border-radius: 4px;
-            font-size: 1em;
+            border-radius: 5px;
+            box-sizing: border-box; /* Include padding in width */
             background-color: var(--card-bg-light);
             color: var(--text-color-light);
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
         }
-        [data-theme="dark"] input[type="text"] {
+        [data-theme="dark"] input[type="text"],
+        [data-theme="dark"] input[type="password"] {
             background-color: var(--card-bg-dark);
             border-color: var(--border-color-dark);
             color: var(--text-color-dark);
         }
 
-        .login-btn {
-            background-color: var(--login-btn-bg-light);
-            color: var(--login-btn-text-light);
-            padding: 12px 20px;
+        button {
+            background-color: var(--login-btn-bg-light); /* Blue */
+            color: var(--login-btn-text-light); /* White */
+            padding: 12px 25px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 1.1em;
             width: 100%;
             transition: background-color 0.3s ease;
         }
-        [data-theme="dark"] .login-btn {
+        button:hover {
+            opacity: 0.9;
+        }
+        [data-theme="dark"] button {
             background-color: var(--login-btn-bg-dark);
             color: var(--login-btn-text-dark);
         }
-        .login-btn:hover {
-            opacity: 0.9;
-        }
-        #error-message {
-            color: red;
+
+        #errorMessage {
+            color: #dc3545; /* Red for errors */
             margin-top: 15px;
             font-size: 0.9em;
         }
@@ -130,27 +132,29 @@
 <body>
     <div class="login-container">
         <h2>Student Login</h2>
-        <div class="form-group">
-            <label for="studentName">Full Name:</label>
-            <input type="text" id="studentName" placeholder="Enter your full name" required>
-        </div>
-        <div class="form-group">
-            <label for="studentId">Student ID:</label>
-            <input type="text" id="studentId" placeholder="Enter your unique ID" required>
-        </div>
-        <button id="loginBtn" class="login-btn">Login</button>
-        <p id="error-message"></p>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="studentName">Full Name:</label>
+                <input type="text" id="studentName" required>
+            </div>
+            <div class="form-group">
+                <label for="studentId">Student ID:</label>
+                <input type="text" id="studentId" required>
+            </div>
+            <button type="submit">Login</button>
+            <div id="errorMessage"></div>
+        </form>
     </div>
 
     <script>
-        // Appwrite Client Initialization - UPDATED
+        // Appwrite Client Initialization
         const client = new Appwrite.Client();
         client
             .setEndpoint('https://nyc.cloud.appwrite.io/v1') // Your API Endpoint
             .setProject('685cb0a90017cc71f99e'); // Your Project ID
 
-        const databases = new Appwrite.Databases(client); // Use Appwrite.Databases
-        const Query = Appwrite.Query; // Access Query directly from Appwrite object
+        const databases = new Appwrite.Databases(client);
+        const Query = Appwrite.Query;
 
         const DATABASE_ID = '685d0c85000aa071581a'; // Your Database ID
         const COLLECTION_ID = '68838ce2003da61468e0'; // Your Collection ID
@@ -161,53 +165,63 @@
             if (theme === 'dark') {
                 body.setAttribute('data-theme', 'dark');
             } else {
-                body.removeAttribute('data-theme'); // Remove data-theme for default (light)
+                body.removeAttribute('data-theme');
             }
-            localStorage.setItem('theme', theme); // Save preference
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Load saved theme on initial page load
+        document.addEventListener('DOMContentLoaded', () => {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
                 applyTheme(savedTheme);
             } else {
-                applyTheme('light'); // Default to light theme if no saved theme
+                applyTheme('light'); // Default to light theme
             }
 
-            document.getElementById('loginBtn').addEventListener('click', async () => {
-                const studentName = document.getElementById('studentName').value.trim();
-                const studentId = document.getElementById('studentId').value.trim();
-                const errorMessage = document.getElementById('error-message');
+            const loginForm = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('errorMessage');
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const studentNameInput = document.getElementById('studentName').value.trim();
+                const studentIdInput = document.getElementById('studentId').value.trim();
 
                 errorMessage.textContent = ''; // Clear previous errors
 
-                if (!studentName || !studentId) {
+                if (!studentNameInput || !studentIdInput) {
                     errorMessage.textContent = 'Please enter both full name and student ID.';
                     return;
                 }
 
                 try {
-                    // Query Appwrite for a document matching both name and id
+                    // Query Appwrite using both ID and Name.
+                    // This serves as an initial filter, but we'll add a strict client-side check.
                     const response = await databases.listDocuments(
                         DATABASE_ID,
                         COLLECTION_ID,
                         [
-                            Query.equal('id', studentId),
-                            Query.equal('name', studentName),
-                            Query.limit(1) // Expecting only one match
+                            Query.equal('id', studentIdInput),
+                            Query.equal('name', studentNameInput),
+                            Query.limit(1)
                         ]
                     );
 
                     if (response.documents.length > 0) {
-                        // Login successful
                         const studentData = response.documents[0];
-                        // Store student ID in session storage for access on record.html and profile.html
-                        sessionStorage.setItem('loggedInStudentId', studentId);
-                        sessionStorage.setItem('loggedInStudentName', studentName); // Store name too
+                        // Perform a strict client-side case-sensitive comparison for both ID and Name
+                        if (studentData.id === studentIdInput && studentData.name === studentNameInput) {
+                            // Both Student ID and Student Name match exactly (case-sensitive)
+                            sessionStorage.setItem('loggedInStudentId', studentIdInput);
+                            sessionStorage.setItem('loggedInStudentName', studentNameInput);
 
-                        window.location.href = 'record.html'; // Redirect to record page
+                            window.location.href = 'record.html'; // Redirect to record page
+                        } else {
+                            // Appwrite might have returned a document (due to case-insensitive matching)
+                            // but the client-side strict check failed.
+                            errorMessage.textContent = 'Invalid Name or Student ID.';
+                        }
                     } else {
+                        // No document found by the Appwrite query at all
                         errorMessage.textContent = 'Invalid Name or Student ID.';
                     }
                 } catch (error) {
