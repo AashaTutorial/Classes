@@ -386,8 +386,8 @@
 
                 // --- Profile Completion Check ---
                 let isProfileComplete = true;
-                // Updated: Only include 'std', 'dob', 'mob', 'school', 'add' for profile completion check
-                const attributesToCheck = ['std', 'dob', 'mob', 'school', 'add'];
+                // Updated: Include 'photoId' in the profile completion check
+                const attributesToCheck = ['std', 'dob', 'mob', 'school', 'add', 'photoId'];
 
                 for (const attr of attributesToCheck) {
                     if (studentData[attr] === undefined || studentData[attr] === null || studentData[attr] === '') {
