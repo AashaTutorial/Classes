@@ -101,12 +101,17 @@
             border-color: var(--border-color-dark);
         }
 
+        /* Updated styles for profile-details for alignment */
         .profile-details p {
             margin: 8px 0;
+            display: flex; /* Use flexbox for each line */
+            align-items: baseline; /* Align items to their text baseline */
         }
         .profile-details strong {
-            display: inline-block;
-            width: 150px;
+            display: inline-block; /* Ensure width applies */
+            width: 150px; /* Fixed width for labels */
+            margin-right: 10px; /* Space between label and value */
+            text-align: left; /* Align labels to the left within their fixed width */
             color: var(--text-color-light);
             transition: color 0.3s ease;
         }
