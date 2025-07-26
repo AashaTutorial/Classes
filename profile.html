@@ -188,18 +188,6 @@
                 <input type="text" id="address" placeholder="e.g., 123 Main St, City" required>
             </div>
             <div class="form-group">
-                <label for="joinDate">Joining Date:</label>
-                <input type="date" id="joinDate" required>
-            </div>
-            <div class="form-group">
-                <label for="fees">Monthly Fees:</label>
-                <input type="number" id="fees" placeholder="e.g., 1000" required>
-            </div>
-            <div class="form-group">
-                <label for="disFees">Discounted Fees (if any):</label>
-                <input type="number" id="disFees" placeholder="e.g., 900 (optional)">
-            </div>
-            <div class="form-group">
                 <label for="photo">Student Photo:</label>
                 <input type="file" id="photo" accept="image/*">
                 <p style="font-size: 0.8em; color: gray; margin-top: 5px;">Upload a clear photo (PNG, JPG, JPEG).</p>
@@ -290,10 +278,6 @@
                     document.getElementById('mob').value = studentData.mob || '';
                     document.getElementById('school').value = studentData.school || '';
                     document.getElementById('address').value = studentData.add || '';
-                    document.getElementById('joinDate').value = studentData.joinDate || ''; // Assumes YYYY-MM-DD format
-                    document.getElementById('fees').value = studentData.fees || '';
-                    document.getElementById('disFees').value = studentData.disFees || '';
-
                     // Display current photo if available
                     if (studentData.photoId) {
                         currentPhotoFileId = studentData.photoId;
@@ -321,7 +305,7 @@
                 const photoFile = document.getElementById('photo').files[0];
 
                 // Simple validation
-                if (!std || !dob || !mob || !school || !address || !joinDate || isNaN(fees)) {
+                if (!std || !dob || !mob || !school || !address || isNaN(fees)) {
                     displayMessage('Please fill in all required fields (Standard, DOB, Mobile, School, Address, Joining Date, Monthly Fees).', 'error');
                     return;
                 }
@@ -357,9 +341,7 @@
                         mob: mob,
                         school: school,
                         add: address, // 'add' in Appwrite corresponds to 'address' here
-                        joinDate: joinDate,
-                        fees: fees,
-                        disFees: disFees,
+
                         photoId: photoIdToSave || null // Save the new photo ID or null if no photo
                     };
 
