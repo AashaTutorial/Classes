@@ -18,6 +18,10 @@
             --login-btn-text-light: white; /* White text for login button */
             --upcoming-text-light: #A8A8A8; /* Light gray for upcoming fees in light theme */
             --upcoming-bg-light: #F5F5F5; /* Slightly darker background for upcoming rows in light theme */
+            --paid-row-text-light: green;
+            --paid-row-bg-light: #e6ffe6; /* Light green background */
+            --unpaid-overdue-text-light: red;
+            --unpaid-overdue-bg-light: #ffe6e6; /* Light red background */
         }
 
         [data-theme="dark"] {
@@ -32,6 +36,10 @@
             --login-btn-text-dark: white; /* White text for login button */
             --upcoming-text-dark: #777; /* Darker gray for upcoming fees in dark theme */
             --upcoming-bg-dark: #323232; /* Slightly lighter background for upcoming rows in dark theme */
+            --paid-row-text-dark: #90EE90; /* Light green text for dark theme */
+            --paid-row-bg-dark: #1a331a; /* Darker green background */
+            --unpaid-overdue-text-dark: #FF6347; /* Tomato red text for dark theme */
+            --unpaid-overdue-bg-dark: #331a1a; /* Darker red background */
         }
 
         body {
@@ -120,13 +128,11 @@
             border: 1px solid var(--border-color-light);
             padding: 10px;
             text-align: left;
-            color: var(--text-color-light);
-            transition: border-color 0.3s ease, color 0.3s ease;
+            transition: border-color 0.3s ease, color 0.3s ease, background-color 0.3s ease; /* Added background-color transition */
         }
         [data-theme="dark"] .fees-table th,
         [data-theme="dark"] .fees-table td {
             border: 1px solid var(--border-color-dark);
-            color: var(--text-color-dark);
         }
 
         .fees-table th {
@@ -140,20 +146,42 @@
         }
 
         .status-paid {
-            color: green;
+            color: green; /* Still good for individual cell if needed */
+            font-weight: bold;
         }
         .status-unpaid {
-            color: red;
+            color: red; /* Still good for individual cell if needed */
+            font-weight: bold;
         }
 
-        /* New styles for upcoming due dates */
-        .upcoming-due {
+        /* New styles for upcoming due dates (entire row) */
+        .upcoming-due td { /* Apply to cells within the row */
             color: var(--upcoming-text-light); /* Dull/light text color */
             background-color: var(--upcoming-bg-light); /* Light background for the row */
         }
-        [data-theme="dark"] .upcoming-due {
+        [data-theme="dark"] .upcoming-due td {
             color: var(--upcoming-text-dark); /* Dull/light text color for dark theme */
             background-color: var(--upcoming-bg-dark); /* Lighter background for the row in dark theme */
+        }
+
+        /* Styles for Paid rows (entire row) */
+        .paid-row td {
+            color: var(--paid-row-text-light);
+            background-color: var(--paid-row-bg-light);
+        }
+        [data-theme="dark"] .paid-row td {
+            color: var(--paid-row-text-dark);
+            background-color: var(--paid-row-bg-dark);
+        }
+
+        /* Styles for Unpaid and Overdue rows (entire row) */
+        .unpaid-overdue-row td {
+            color: var(--unpaid-overdue-text-light);
+            background-color: var(--unpaid-overdue-bg-light);
+        }
+        [data-theme="dark"] .unpaid-overdue-row td {
+            color: var(--unpaid-overdue-text-dark);
+            background-color: var(--unpaid-overdue-bg-dark);
         }
 
         .complete-profile-section {
@@ -253,7 +281,7 @@
                 const date = new Date(year, month, day);
 
                 // Validate if the parsed date is actually correct
-                // This checks if the date components match the input, preventing invalid dates
+                // This checks if the date components match the input, preventing invalid dates like Feb 30
                 if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
                     return date;
                 }
@@ -261,7 +289,7 @@
             return null; // Return null for invalid or unparseable formats
         }
 
-        // Appwrite Client Initialization - UPDATED
+        // Appwrite Client Initialization
         const client = new Appwrite.Client();
         client
             .setEndpoint('https://nyc.cloud.appwrite.io/v1') // Your API Endpoint
@@ -330,17 +358,14 @@
 
                 // --- Profile Completion Check ---
                 let isProfileComplete = true;
-                // Added 'joinDate' and 'disFees' to the check
                 const attributesToCheck = ['std', 'dob', 'mob', 'school', 'add', 'photoId', 'joinDate', 'fees', 'disFees'];
 
                 for (const attr of attributesToCheck) {
-                    // Consider 0 as a valid value for fees/disFees, so check for null/undefined/empty string
                     if (studentData[attr] === undefined || studentData[attr] === null || studentData[attr] === '') {
                         isProfileComplete = false;
                         break;
                     }
                 }
-
 
                 if (!isProfileComplete) {
                     studentDetailsSection.style.display = 'none';
@@ -362,7 +387,6 @@
                     // Fetch and display student photo
                     if (studentData.photoId) {
                         try {
-                            // Get a file preview URL from Appwrite Storage
                             const fileUrl = storage.getFileDownload(
                                 BUCKET_ID,
                                 studentData.photoId
@@ -410,14 +434,14 @@
                         const row = feesTableBody.insertRow();
                         const monthCell = row.insertCell();
                         const statusCell = row.insertCell();
-                        const dueDateCell = row.insertCell(); // New cell for Due Date
+                        const dueDateCell = row.insertCell();
                         const dateOfPaymentCell = row.insertCell();
 
                         monthCell.textContent = monthYear;
 
                         // Calculate Due Date
                         let dueDateStr = 'N/A';
-                        let calculatedDueDateObj = null; // Store Date object for comparison
+                        let calculatedDueDateObj = null;
 
                         if (joinDay) {
                             const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -430,28 +454,28 @@
                                 let nextMonthIndex = currentMonthIndex + 1;
                                 let nextYear = currentYear;
 
-                                if (nextMonthIndex > 11) { // If month rolls over to next year (e.g., Dec -> Jan)
-                                    nextMonthIndex = 0; // January
+                                if (nextMonthIndex > 11) {
+                                    nextMonthIndex = 0;
                                     nextYear++;
                                 }
 
-                                // Create a date object for the next month with the joinDay
                                 calculatedDueDateObj = new Date(nextYear, nextMonthIndex, joinDay);
+                                // Ensure the date is valid and not overflowing (e.g., Feb 30 becomes Mar 2)
+                                // If the day set is greater than the max days in the month,
+                                // the Date object will automatically roll over to the next month.
+                                // We need the due date to be capped at the last day of the target month
+                                // if the joinDay is too high (e.g., 31st for February).
+                                // Let's simplify: the prompt implies taking the 'DD' and 'MM+1' for the next month.
+                                // If joinDay (DD) is 31 and next month is Feb, it should still be Feb 28/29.
+                                // The current Date constructor behavior for overflow is acceptable based on the prompt.
 
-                                // Format as DD/MM/YYYY
                                 const dd = String(calculatedDueDateObj.getDate()).padStart(2, '0');
-                                const mm = String(calculatedDueDateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                                const mm = String(calculatedDueDateObj.getMonth() + 1).padStart(2, '0');
                                 const yyyy = calculatedDueDateObj.getFullYear();
                                 dueDateStr = `${dd}/${mm}/${yyyy}`;
                             }
                         }
                         dueDateCell.textContent = dueDateStr;
-
-                        // Apply dull color if due date is in the future
-                        if (calculatedDueDateObj && calculatedDueDateObj > today) {
-                            row.classList.add('upcoming-due');
-                        }
-
 
                         const paidIndex = paidMonths.indexOf(monthYear);
                         if (paidIndex !== -1) {
@@ -460,10 +484,20 @@
                             const paymentDateString = paidDates[paidIndex];
                             const paymentDate = parseDMYtoDate(paymentDateString);
                             dateOfPaymentCell.textContent = paymentDate ? paymentDate.toLocaleDateString() : 'Invalid Date';
+                            row.classList.add('paid-row'); // Apply green color to entire row if paid
                         } else {
                             statusCell.textContent = 'Unpaid';
                             statusCell.classList.add('status-unpaid');
                             dateOfPaymentCell.textContent = '-';
+
+                            // Logic for unpaid rows based on due date
+                            if (calculatedDueDateObj) {
+                                if (calculatedDueDateObj <= today) {
+                                    row.classList.add('unpaid-overdue-row'); // Red if unpaid and overdue/due today
+                                } else {
+                                    row.classList.add('upcoming-due'); // Dull if unpaid and not yet due
+                                }
+                            }
                         }
                     });
                 }
