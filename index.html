@@ -7,60 +7,68 @@
     <link rel="icon" href="logo.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Theme Variables - Consistent with register_page.html */
+        /* Theme Variables */
         :root {
-            /* Dark Theme (Green and Black) */
-            --bg-color: black;
-            --text-color: white;
-            --accent-color: #1a5f1a; /* Dull and Dark Green */
-            --card-bg: #242424; /* Dark grey for cards */
-            --header-bg: #212121; /* Darker header for dark theme */
-            --hero-bg: #212121; /* Darker hero for dark theme */
-            --section-border-color: #555; /* Lighter border in dark theme */
-            --section-heading-color: #81c784; /* Lighter green for headings in dark theme */
+            /* Light Theme (Default) */
+            --bg-color-light: #f8f5f0; /* Off-white / light cream */
+            --text-color-light: #4a3e36; /* Dark brown */
+            --accent-color-light: #8B4513; /* SaddleBrown for buttons/highlights */
+            --card-bg-light: white;
+            --header-bg-light: #8B4513; /* Dark brown for header */
+            --border-color-light: #d1c5b8; /* Lighter brown for borders */
+            --heading-color-light: #8B4513; /* Dark brown for headings */
         }
 
-        [data-theme="light"] {
-            /* Light Theme (Green and White) */
-            --bg-color: #f4f4f4; /* Light background */
-            --text-color: #333; /* Dark text for light theme */
-            --accent-color: #4CAF50; /* Primary Green */
-            --card-bg: white;
-            --header-bg: #4CAF50; /* Primary Green for header */
-            --hero-bg: #e8f5e9; /* Light green background for hero */
-            --section-border-color: #eee; /* Lighter border in light theme */
-            --section-heading-color: #4CAF50; /* Primary green for headings in light theme */
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --bg-color-dark: #1a1a1a; /* Black */
+            --text-color-dark: #e0d7cf; /* Light brown/cream for text */
+            --accent-color-dark: #d2b48c; /* Tan/light brown for buttons/highlights */
+            --card-bg-dark: #2c2c2c; /* Dark grey for cards */
+            --header-bg-dark: #3a3a3a; /* Darker grey for header */
+            --border-color-dark: #555; /* Darker border */
+            --heading-color-dark: #d2b48c; /* Light brown for headings */
         }
 
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+            background-color: var(--bg-color-light); /* Default to light theme background */
+            color: var(--text-color-light); /* Default to light theme text color */
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            display: flex;
+            flex-direction: column; /* Allow content to push footer down */
         }
+
+        [data-theme="dark"] body {
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+        }
+
         .header {
-            background-color: var(--header-bg);
-            color: white; /* Text color for header, usually always white for contrast */
+            background-color: var(--header-bg-light); /* Default to light theme header */
+            color: white; /* Header text usually remains white for contrast */
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px; /* Space between header elements */
+            gap: 10px;
         }
-        .header .logo-text { /* Added class for potential logo text styling */
+
+        [data-theme="dark"] .header {
+            background-color: var(--header-bg-dark);
+        }
+
+        .header .logo-text {
             margin: 0;
             font-size: 2em;
         }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px; /* Space between login button and toggle */
-        }
-        .header .login-btn {
-            background-color: white; /* White for light theme, Green for dark theme */
-            color: var(--accent-color); /* Green for light theme, White for dark theme */
+        /* Removed header-actions from here as buttons are moved to footer */
+        .header .login-btn { /* This style is now applied to the footer button */
+            background-color: white;
+            color: var(--accent-color-light); /* Default to light theme accent */
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
@@ -70,23 +78,19 @@
             display: inline-block;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-        [data-theme="light"] .header .login-btn {
-             background-color: #f4f4f4; /* White */
-             color: #4CAF50; /* Green */
-        }
         [data-theme="dark"] .header .login-btn {
-             background-color: var(--accent-color); /* Dull and Dark Green */
-             color: white;
+            background-color: var(--accent-color-dark);
+            color: var(--bg-color-dark); /* Black text on light brown button */
         }
-
         .header .login-btn:hover {
             opacity: 0.9;
         }
 
+        /* Theming for the toggle button in the footer */
         .theme-toggle-btn {
             background: none;
-            border: 1px solid white; /* White border for contrast */
-            color: white;
+            border: 1px solid var(--text-color-light); /* Border color based on theme text color */
+            color: var(--text-color-light); /* Icon color based on theme text color */
             padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
@@ -96,80 +100,153 @@
             justify-content: center;
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
-        .theme-toggle-btn:hover {
-            background-color: rgba(255, 255, 255, 0.2); /* Subtle hover */
-        }
-        /* Specific hover for light theme */
-        [data-theme="light"] .theme-toggle-btn {
-            border-color: white;
-            color: white;
-        }
-        [data-theme="light"] .theme-toggle-btn:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-        /* Specific hover for dark theme */
         [data-theme="dark"] .theme-toggle-btn {
-            border-color: white;
-            color: white;
+            border: 1px solid var(--text-color-dark);
+            color: var(--text-color-dark);
+        }
+        .theme-toggle-btn:hover {
+            background-color: rgba(0, 0, 0, 0.1); /* Slight darker overlay on hover */
         }
         [data-theme="dark"] .theme-toggle-btn:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .full-width-img {
+            width: 100%;
+            height: auto;
+            display: block; /* Ensures no extra space below image */
+            margin-bottom: 20px;
         }
 
         .container {
             max-width: 900px;
             margin: 20px auto;
             padding: 20px;
-            background-color: var(--card-bg);
+            background-color: var(--card-bg-light); /* Default to light theme card bg */
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            flex-grow: 1; /* Allows container to grow and push footer down */
         }
-        .hero {
-            text-align: center;
-            padding: 50px 0;
-            background-color: var(--hero-bg);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            transition: background-color 0.3s ease;
+        [data-theme="dark"] .container {
+            background-color: var(--card-bg-dark);
         }
-        .hero img {
-            max-width: 150px; /* Adjust logo size */
-            margin-bottom: 20px;
-        }
-        .section {
+
+        .content-section {
             margin-bottom: 30px;
-            border: 1px solid var(--section-border-color); /* Add a subtle border */
             padding: 20px;
+            border: 1px solid var(--border-color-light); /* Default to light theme border */
             border-radius: 8px;
-            background-color: var(--card-bg); /* Use card background */
+            background-color: var(--card-bg-light); /* Default to light theme card bg */
             transition: border-color 0.3s ease, background-color 0.3s ease;
         }
-        .section h2 {
-            color: var(--section-heading-color);
-            border-bottom: 2px solid var(--section-heading-color);
+        [data-theme="dark"] .content-section {
+            border: 1px solid var(--border-color-dark);
+            background-color: var(--card-bg-dark);
+        }
+
+        .content-section h2 {
+            color: var(--heading-color-light); /* Default to light theme heading */
+            border-bottom: 2px solid var(--heading-color-light);
             padding-bottom: 10px;
             margin-bottom: 20px;
             transition: color 0.3s ease, border-color 0.3s ease;
         }
-        .section ul {
-            list-style: none; /* Remove default bullets */
+        [data-theme="dark"] .content-section h2 {
+            color: var(--heading-color-dark);
+            border-bottom-color: var(--heading-color-dark);
+        }
+
+        .contact-info {
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 1.1em;
+        }
+        .contact-info p {
+            margin: 5px 0;
+        }
+
+        .fees-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .fees-table th, .fees-table td {
+            border: 1px solid var(--border-color-light);
+            padding: 10px;
+            text-align: left;
+        }
+        [data-theme="dark"] .fees-table th, [data-theme="dark"] .fees-table td {
+            border: 1px solid var(--border-color-dark);
+        }
+
+        .fees-table th {
+            background-color: var(--accent-color-light);
+            color: white;
+        }
+        [data-theme="dark"] .fees-table th {
+            background-color: var(--accent-color-dark);
+            color: var(--bg-color-dark); /* Black text on light brown header */
+        }
+        .features-list {
+            list-style: none;
             padding: 0;
         }
-        .section ul li {
+        .features-list li {
             margin-bottom: 8px;
             position: relative;
-            padding-left: 25px; /* Space for custom bullet/icon */
+            padding-left: 25px;
         }
-        .section ul li::before {
-            content: "\f058"; /* Font Awesome check-circle icon */
+        .features-list li::before {
+            content: "\f00c"; /* Font Awesome check icon */
             font-family: "Font Awesome 6 Free";
-            font-weight: 900; /* Solid icon */
-            color: var(--accent-color);
+            font-weight: 900;
+            color: var(--accent-color-light); /* Default to light theme accent */
             position: absolute;
             left: 0;
             top: 2px;
             font-size: 0.9em;
+        }
+        [data-theme="dark"] .features-list li::before {
+            color: var(--accent-color-dark);
+        }
+
+        .footer {
+            margin-top: auto; /* Push footer to the bottom */
+            background-color: var(--header-bg-light); /* Same as header background */
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center; /* Center the buttons */
+            align-items: center;
+            gap: 20px; /* Space between buttons */
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+        [data-theme="dark"] .footer {
+            background-color: var(--header-bg-dark);
+        }
+
+        .footer .login-btn-large {
+            background-color: var(--accent-color-light);
+            color: white;
+            padding: 15px 30px; /* Bigger padding */
+            border: none;
+            border-radius: 8px; /* Slightly more rounded */
+            cursor: pointer;
+            font-size: 1.2em; /* Bigger font size */
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        [data-theme="dark"] .footer .login-btn-large {
+            background-color: var(--accent-color-dark);
+            color: var(--bg-color-dark); /* Black text on light brown button */
+        }
+        .footer .login-btn-large:hover {
+            opacity: 0.9;
+            transform: translateY(-2px); /* Slight lift effect */
         }
 
         /* Responsive adjustments */
@@ -182,16 +259,21 @@
                 font-size: 1.8em;
                 margin-bottom: 10px;
             }
-            .header-actions {
-                width: 100%;
-                justify-content: center;
-            }
             .container {
                 margin: 10px;
                 padding: 15px;
             }
-            .hero {
-                padding: 30px 0;
+            .contact-info {
+                font-size: 1em;
+            }
+            .footer {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .footer .login-btn-large,
+            .footer .theme-toggle-btn {
+                width: 90%; /* Make buttons full width on small screens */
+                max-width: 300px; /* Limit max width for smaller screens */
             }
         }
     </style>
@@ -200,63 +282,69 @@
 <body>
     <header class="header">
         <h1 class="logo-text">Aasha Tutorial</h1>
-        <div class="header-actions">
-            <a href="login.html" class="login-btn">Student Login</a>
-            <button id="themeToggle" class="theme-toggle-btn">
-                <i class="fas fa-sun"></i> </button>
+        </header>
+
+    <main>
+        <img src="logo.png" alt="Aasha Tutorial Logo" class="full-width-img">
+
+        <div class="container">
+            <section class="contact-info">
+                <p><strong>Address:</strong> This is sample address, I will update manually in code</p>
+                <p><strong>Contact Numbers:</strong> 1234567890, 0987654321</p>
+            </section>
+
+            <img src="class.png" alt="Classroom Image" class="full-width-img">
+
+            <section class="content-section">
+                <h2>Batch Details</h2>
+                <p><strong>Batch 1:</strong> Morning Batch 08:00 am to 10:00 am</p>
+                <p><strong>Batch 2:</strong> Evening Batch 07:00 pm to 09:00 pm</p>
+            </section>
+
+            <section class="content-section">
+                <h2>Monthly Fees Details</h2>
+                <table class="fees-table">
+                    <thead>
+                        <tr>
+                            <th>Standard</th>
+                            <th>Monthly Fees</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Jr.Kg & Sr.Kg</td><td>₹ 300</td></tr>
+                        <tr><td>1st & 2nd</td><td>₹ 350</td></tr>
+                        <tr><td>3rd & 4th</td><td>₹ 400</td></tr>
+                        <tr><td>5th & 6th</td><td>₹ 450</td></tr>
+                        <tr><td>7th & 8th</td><td>₹ 500</td></tr>
+                        <tr><td>9th</td><td>₹ 550</td></tr>
+                        <tr><td>10th</td><td>₹ 600</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="content-section">
+                <h2>Why Choose Aasha Tutorial?</h2>
+                <p>At Aasha Tutorial, we are committed to nurturing young minds and building a strong academic foundation. Here’s why students thrive with us:</p>
+                <ul class="features-list">
+                    <li>Experienced and passionate educators dedicated to student success.</li>
+                    <li>Small batch sizes ensuring personalized attention and interactive learning.</li>
+                    <li>Comprehensive curriculum covering all core subjects with clarity.</li>
+                    <li>Regular assessments to track progress and identify areas for improvement.</li>
+                    <li>Dedicated doubt-clearing sessions to ensure no student is left behind.</li>
+                    <li>A supportive and encouraging environment that fosters a love for learning.</li>
+                    <li>Focus on conceptual understanding rather than rote memorization.</li>
+                    <li>Proven track record of students achieving excellent results.</li>
+                </ul>
+            </section>
         </div>
-    </header>
+    </main>
 
-    <div class="container">
-        <section class="hero">
-            <img src="logo.png" alt="Aasha Tutorial Logo">
-            <h2>Welcome to Aasha Tutorial</h2>
-            <p>Your journey to academic excellence starts here!</p>
-            <p>Located in Naigaon East, Palghar, we empower school students from 1st to 10th grade.</p>
-        </section>
-
-        <section class="section">
-            <h2>About Us</h2>
-            <p>Aasha Tutorial is a leading coaching institute dedicated to providing high-quality education and fostering a strong foundation for young minds. Our experienced educators and comprehensive curriculum ensure that every student receives personalized attention and achieves their full potential.</p>
-        </section>
-
-        <section class="section">
-            <h2>Our Batches</h2>
-            <p>We offer specialized batches for students from Grade 1 to Grade 10, covering all core subjects. Our small batch sizes ensure individual focus and interactive learning sessions.</p>
-            <ul>
-                <li>Grade 1-4: Foundational Learning & Language Skills</li>
-                <li>Grade 5-7: Core Subject Mastery & Problem Solving</li>
-                <li>Grade 8-10: Advanced Concepts & Exam Preparation</li>
-            </ul>
-        </section>
-
-        <section class="section">
-            <h2>Key Features</h2>
-            <ul>
-                <li>Experienced and Dedicated Faculty</li>
-                <li>Comprehensive Study Material</li>
-                <li>Regular Assessments and Progress Tracking</li>
-                <li>Doubt Clearing Sessions</li>
-                <li>Interactive Learning Environment</li>
-                <li>Parent-Teacher Meetings</li>
-            </ul>
-        </section>
-
-        <section class="section">
-            <h2>Services</h2>
-            <p>Beyond classroom teaching, we offer:</p>
-            <ul>
-                <li>Individual Mentoring</li>
-                <li>Career Guidance (for higher grades)</li>
-                <li>Mock Tests and Performance Analysis</li>
-            </ul>
-        </section>
-
-        <section class="section">
-            <h2>Highlights</h2>
-            <p>Our students consistently achieve excellent results in school examinations. We focus not just on grades, but on building a strong conceptual understanding and a lifelong love for learning.</p>
-        </section>
-    </div>
+    <footer class="footer">
+        <a href="login.html" class="login-btn-large">Student Login</a>
+        <button id="themeToggle" class="theme-toggle-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -266,14 +354,14 @@
 
             // Function to apply theme
             function applyTheme(theme) {
-                if (theme === 'light') {
-                    body.setAttribute('data-theme', 'light');
+                if (theme === 'dark') {
+                    body.setAttribute('data-theme', 'dark');
                     themeIcon.classList.remove('fa-sun');
-                    themeIcon.classList.add('fa-moon'); // Show moon icon when in light mode (to toggle to dark)
+                    themeIcon.classList.add('fa-moon'); // Show moon icon when in dark mode (to toggle to light)
                 } else {
-                    body.removeAttribute('data-theme'); // Remove data-theme for default (dark)
+                    body.removeAttribute('data-theme'); // Remove data-theme for default (light)
                     themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun'); // Show sun icon when in dark mode (to toggle to light)
+                    themeIcon.classList.add('fa-sun'); // Show sun icon when in light mode (to toggle to dark)
                 }
                 localStorage.setItem('theme', theme); // Save preference
             }
@@ -283,18 +371,12 @@
             if (savedTheme) {
                 applyTheme(savedTheme);
             } else {
-                // If no theme saved, check system preference (optional, but good fallback)
-                // For this project, we default to dark as per initial setup
-                // if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-                //     applyTheme('light');
-                // } else {
-                    applyTheme('dark'); // Default to dark if no saved theme
-                // }
+                applyTheme('light'); // Default to light theme if no saved theme
             }
 
             // Toggle theme on button click
             themeToggleBtn.addEventListener('click', () => {
-                const currentTheme = body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+                const currentTheme = body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
                 const newTheme = currentTheme === 'light' ? 'dark' : 'light';
                 applyTheme(newTheme);
             });
