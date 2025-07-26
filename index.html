@@ -200,7 +200,7 @@
             max-width: 900px; /* Match container max-width */
             padding: 0 20px; /* Match container padding */
             box-sizing: border-box;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
+            /* flex-wrap: wrap; Removed as we want them in a single line on mobile too */
         }
 
         .button-group-section .login-btn-large {
@@ -212,14 +212,13 @@
             cursor: pointer;
             font-size: 1.2em; /* Bigger font size */
             text-decoration: none;
-            display: inline-block;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            flex-grow: 1; /* Allow it to grow */
-            max-width: 80%; /* Takes 80% of the available space in the row */
-            height: 50px; /* Fixed height for consistency */
             display: flex; /* Use flex to center text vertically */
             justify-content: center;
             align-items: center;
+            height: 50px; /* Fixed height for consistency */
+            /* Adjusted width for desktop, will be overridden by mobile media query */
+            width: calc(85% - 7.5px); /* Approx 85% width, accounting for half of gap */
+            flex-shrink: 0; /* Prevent shrinking */
         }
         [data-theme="dark"] .button-group-section .login-btn-large {
             background-color: var(--login-btn-bg-dark); /* Blue */
@@ -232,13 +231,16 @@
 
         .button-group-section .theme-toggle-btn {
             height: 50px; /* Same height as login button */
-            width: 50px; /* Make it square */
+            width: calc(15% - 7.5px); /* Approx 15% width, accounting for half of gap */
             flex-shrink: 0; /* Prevent shrinking */
             border: 1px solid var(--text-color-light); /* Border color based on theme text color */
             color: var(--text-color-light); /* Icon color based on theme text color */
             background-color: transparent; /* Transparent background */
             border-radius: 8px; /* Match login button border-radius */
             font-size: 1.2em; /* Adjust icon size */
+            display: flex; /* Use flex to center icon */
+            justify-content: center;
+            align-items: center;
         }
         [data-theme="dark"] .button-group-section .theme-toggle-btn {
             border: 1px solid var(--text-color-dark);
@@ -264,17 +266,20 @@
                 font-size: 1em;
             }
             .button-group-section {
-                flex-direction: column; /* Stack buttons vertically on small screens */
-                gap: 15px;
+                /* Keep flex-direction: row for single line on mobile */
+                flex-direction: row;
+                /* Adjust padding to prevent horizontal scrolling on very small screens */
+                padding: 0 10px;
             }
-            .button-group-section .login-btn-large,
-            .button-group-section .theme-toggle-btn {
-                width: 90%; /* Make buttons full width on small screens */
-                max-width: 300px; /* Limit max width for smaller screens */
+            .button-group-section .login-btn-large {
+                width: calc(85% - 7.5px); /* Maintain 80-90% width */
+                max-width: none; /* Remove max-width constraint for mobile */
+                height: 50px; /* Ensure consistent height */
             }
             .button-group-section .theme-toggle-btn {
-                height: auto; /* Allow height to adjust for stacked layout */
-                padding: 15px; /* Add padding when stacked */
+                width: calc(15% - 7.5px); /* Maintain 10-20% width */
+                height: 50px; /* Ensure consistent height */
+                padding: 0; /* Remove padding when in a row */
             }
         }
     </style>
