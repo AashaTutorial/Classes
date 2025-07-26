@@ -536,7 +536,7 @@
                     if (pendingMonthsCount > 0) {
                         const effectiveFees = Math.min(monthlyFees || Infinity, discountedFees || Infinity);
                         const totalPendingAmount = effectiveFees !== Infinity ? (pendingMonthsCount * effectiveFees).toFixed(2) : 'N/A';
-                        pendingFeesStatement.textContent = `Note: Your ${pendingMonthsCount} month(s) fees ₹${totalPendingAmount} is pending`;
+                        pendingFeesStatement.textContent = `Note: Your ${pendingMonthsCount} month fees ₹${totalPendingAmount} is pending`;
                         pendingFeesStatement.classList.add('red-text');
                         pendingFeesStatement.classList.remove('green-text');
                     } else {
