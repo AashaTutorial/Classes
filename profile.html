@@ -152,6 +152,18 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        #message.info { /* Added for 'Saving profile...' message */
+            background-color: #cfe2ff;
+            color: #052c65;
+        }
+
+        #currentPhotoPreview {
+            max-width: 150px;
+            max-height: 150px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            display: none; /* Hidden by default */
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
 </head>
@@ -190,8 +202,8 @@
             <div class="form-group">
                 <label for="photo">Student Photo:</label>
                 <input type="file" id="photo" accept="image/*">
-                <p style="font-size: 0.8em; color: gray; margin-top: 5px;">Upload a clear photo (PNG, JPG, JPEG).</p>
-                <img id="currentPhotoPreview" src="" alt="Current Photo" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none;">
+                <p style="font-size: 0.8em; color: gray; margin-top: 5px;">Upload a clear photo (PNG, JPG, JPEG). Leave blank to remove existing photo.</p>
+                <img id="currentPhotoPreview" src="#" alt="Current Photo" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none;">
             </div>
 
             <div class="button-group">
@@ -199,7 +211,7 @@
                 <button type="button" onclick="window.location.href='record.html'">Back to Record</button>
             </div>
 
-            <div id="message" class="message"></div>
+            <div id="message"></div>
         </form>
     </div>
 
@@ -213,10 +225,11 @@
         const databases = new Appwrite.Databases(client);
         const storage = new Appwrite.Storage(client);
         const Query = Appwrite.Query;
+        const ID = Appwrite.ID; // For generating unique IDs for files
 
         const DATABASE_ID = '685d0c85000aa071581a'; // Your Database ID
         const COLLECTION_ID = '68838ce2003da61468e0'; // Your Collection ID
-        const BUCKET_ID = '685dee56002dac3412a7'; // Your Bucket ID
+        const BUCKET_ID = '685dee56002dac3412a7'; // Your Bucket ID - Ensure this matches your Appwrite setup
 
         // Function to apply theme (copied from index.html for consistency)
         function applyTheme(theme) {
@@ -226,8 +239,8 @@
             } else {
                 body.removeAttribute('data-theme');
             }
-            // No need to save theme here, as this page doesn't have a theme toggle.
             // Theme preference is usually loaded once on index/record and persists.
+            // No need to save theme here, as this page doesn't have a theme toggle.
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -244,7 +257,16 @@
             const profileForm = document.getElementById('profileForm');
             const studentNameInput = document.getElementById('studentName');
             const studentIdInput = document.getElementById('studentId');
+            const photoInput = document.getElementById('photo'); // Get reference to photo file input
             const currentPhotoPreview = document.getElementById('currentPhotoPreview');
+
+            // Form field references
+            const stdField = document.getElementById('std');
+            const dobField = document.getElementById('dob');
+            const mobField = document.getElementById('mob');
+            const schoolField = document.getElementById('school');
+            const addressField = document.getElementById('address');
+
 
             if (!loggedInStudentId || !loggedInStudentName) {
                 alert('Please log in to complete your profile.');
@@ -273,17 +295,22 @@
                     studentDocumentId = studentData.$id;
 
                     // Populate form fields with existing data
-                    document.getElementById('std').value = studentData.std || '';
-                    document.getElementById('dob').value = studentData.dob || ''; // Assumes YYYY-MM-DD format from Appwrite or empty
-                    document.getElementById('mob').value = studentData.mob || '';
-                    document.getElementById('school').value = studentData.school || '';
-                    document.getElementById('address').value = studentData.add || '';
-                    // Display current photo if available
-                    if (studentData.photoId) {
+                    stdField.value = studentData.std || '';
+                    dobField.value = studentData.dob || ''; // Assumes YYYY-MM-DD format from Appwrite or empty
+                    mobField.value = studentData.mob || '';
+                    schoolField.value = studentData.school || '';
+                    addressField.value = studentData.add || ''; // 'add' from Appwrite attribute
+
+                    // Display current photo if available and valid
+                    if (studentData.photoId) { // Simplified check as per your request
                         currentPhotoFileId = studentData.photoId;
-                        const fileUrl = storage.getFileDownload(BUCKET_ID, currentPhotoFileId);
+                        // Use getFilePreview for displaying images
+                        const fileUrl = storage.getFilePreview(BUCKET_ID, currentPhotoFileId);
                         currentPhotoPreview.src = fileUrl;
                         currentPhotoPreview.style.display = 'block';
+                    } else {
+                        currentPhotoPreview.src = ''; // Clear src if no photo
+                        currentPhotoPreview.style.display = 'none'; // Hide preview
                     }
                 }
             } catch (error) {
@@ -294,19 +321,17 @@
             profileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                const std = document.getElementById('std').value;
-                const dob = document.getElementById('dob').value;
-                const mob = document.getElementById('mob').value;
-                const school = document.getElementById('school').value;
-                const address = document.getElementById('address').value;
-                const joinDate = document.getElementById('joinDate').value;
-                const fees = parseFloat(document.getElementById('fees').value);
-                const disFees = document.getElementById('disFees').value ? parseFloat(document.getElementById('disFees').value) : null;
-                const photoFile = document.getElementById('photo').files[0];
+                // Retrieve all field values (excluding joinDate, fees, disFees)
+                const std = stdField.value;
+                const dob = dobField.value;
+                const mob = mobField.value;
+                const school = schoolField.value;
+                const address = addressField.value;
+                const photoFile = photoInput.files[0];
 
-                // Simple validation
-                if (!std || !dob || !mob || !school || !address || isNaN(fees)) {
-                    displayMessage('Please fill in all required fields (Standard, DOB, Mobile, School, Address, Joining Date, Monthly Fees).', 'error');
+                // Simple validation for required fields (excluding joinDate, fees, disFees)
+                if (!std || !dob || !mob || !school || !address) {
+                    displayMessage('Please fill in all required fields (Standard, DOB, Mobile, School, Address).', 'error');
                     return;
                 }
 
@@ -329,11 +354,21 @@
                         // Upload new photo
                         const uploadedFile = await storage.createFile(
                             BUCKET_ID,
-                            Appwrite.ID.unique(),
+                            ID.unique(), // Generate unique ID for the new file
                             photoFile
                         );
                         photoIdToSave = uploadedFile.$id;
+                    } else if (currentPhotoFileId && photoInput.value === '') {
+                        // If photo input is cleared and there was an existing photo
+                        try {
+                            await storage.deleteFile(BUCKET_ID, currentPhotoFileId);
+                            console.log("Existing photo removed successfully from storage.");
+                        } catch (deleteError) {
+                            console.warn("Could not delete existing photo on clear (might not exist or permission issue):", deleteError);
+                        }
+                        photoIdToSave = null; // Set photo ID to null for the document
                     }
+                    // If no new photo and no existing photo, photoIdToSave remains null
 
                     const dataToUpdate = {
                         std: std,
@@ -341,8 +376,7 @@
                         mob: mob,
                         school: school,
                         add: address, // 'add' in Appwrite corresponds to 'address' here
-
-                        photoId: photoIdToSave || null // Save the new photo ID or null if no photo
+                        photoId: photoIdToSave // Save the new photo ID, or null if no photo
                     };
 
                     // If studentDocumentId is not yet set (should be from initial fetch, but as a fallback)
@@ -371,6 +405,8 @@
                     );
 
                     displayMessage('Profile updated successfully!', 'success');
+                    // Update currentPhotoFileId after successful save
+                    currentPhotoFileId = photoIdToSave;
                     setTimeout(() => {
                         window.location.href = 'record.html';
                     }, 2000);
@@ -385,7 +421,7 @@
         function displayMessage(message, type) {
             const messageDiv = document.getElementById('message');
             messageDiv.textContent = message;
-            messageDiv.className = '';
+            messageDiv.className = ''; // Clear existing classes
             messageDiv.classList.add(type);
             messageDiv.style.display = 'block';
         }
