@@ -121,6 +121,19 @@
             background-color: var(--card-bg-dark);
         }
 
+        .list-section {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid var(--border-color-light); /* Default to light theme border */
+            border-radius: 8px;
+            background-color: var(--card-bg-light); /* Default to light theme card bg */
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        [data-theme="dark"] .content-section {
+            border: 1px solid var(--border-color-dark);
+            background-color: var(--card-bg-dark);
+        }
+
         .content-section h2 {
             color: var(--accent-color-light); /* Default to light theme heading */
             border-bottom: 2px solid var(--accent-color-light);
@@ -172,7 +185,7 @@
         .features-list li {
             margin-bottom: 8px;
             position: relative;
-            padding-left: 10px;
+            padding-left: 20px;
         }
         .features-list li::before {
             content: "\f00c"; /* Font Awesome check icon */
@@ -332,11 +345,12 @@
                 </table>
             </section>
 
-            <section class="content-section">
+            <section class="list-section">
                 <h2>Why Choose Aasha Tutorial?</h2>
-                <p>At Aasha Tutorial, we are committed to nurturing young minds and building a strong academic foundation. <br>
-                    Here’s why students thrive with us:</p>
+                <p>At Aasha Tutorial, we are committed to nurturing young minds and building a strong academic foundation.</p>
+                    
                 <ul class="features-list">
+                    <p></p>Here’s why students thrive with us:</p>
                     <li>Experienced and passionate educators dedicated to student success.</li>
                     <li>Small batch sizes ensuring personalized attention and interactive learning.</li>
                     <li>Comprehensive curriculum covering all core subjects with clarity.</li>
