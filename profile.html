@@ -127,10 +127,14 @@
             font-size: 1em;
             flex-grow: 1; /* Allow buttons to grow and fill space */
             min-width: 140px; /* Ensure a minimum width for buttons */
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, opacity 0.3s ease;
         }
         .button-group button:hover {
             opacity: 0.9;
+        }
+        .button-group button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
         [data-theme="dark"] .button-group button {
             background-color: var(--login-btn-bg-dark);
@@ -156,6 +160,10 @@
             background-color: #cfe2ff;
             color: #052c65;
         }
+        #message.warning { /* For validation messages */
+            background-color: #fff3cd;
+            color: #664d03;
+        }
 
         #currentPhotoPreview {
             max-width: 150px;
@@ -164,6 +172,15 @@
             margin-top: 10px;
             display: none; /* Hidden by default */
         }
+        #photoUploadStatus {
+            margin-top: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        #photoUploadStatus.uploading { color: #007bff; }
+        #photoUploadStatus.success { color: #28a745; }
+        #photoUploadStatus.error { color: #dc3545; }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
 </head>
@@ -203,10 +220,11 @@
                 <label for="photo">Student Photo:</label>
                 <input type="file" id="photo" accept="image/*">
                 <p style="font-size: 0.8em; color: gray; margin-top: 5px;">Upload a clear photo (PNG, JPG, JPEG). Leave blank to remove existing photo.</p>
+                <span id="photoUploadStatus"></span>
                 <img id="currentPhotoPreview" src="#" alt="Current Photo" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none;">
             </div>
             <div class="button-group">
-                <button type="submit">Save Profile</button>
+                <button type="submit" id="saveProfileBtn" disabled>Save Profile</button>
                 <button type="button" onclick="window.location.href='record.html'">Back to Record</button>
             </div>
             <div id="message"></div>
@@ -246,6 +264,28 @@
             applyTheme('light'); // Default to light theme if no saved theme
         }
 
+        let photoUploadInProgress = false;
+        let isPhotoUploadSuccessful = true; // Assume true initially if no photo is being uploaded or there's an existing one
+
+        function checkFormValidityAndToggleSaveButton() {
+            const allRequiredFieldsFilled =
+                stdInput.value.trim() !== '' &&
+                dobInput.value.trim() !== '' &&
+                mobInput.value.trim() !== '' &&
+                schoolInput.value.trim() !== '' &&
+                addressInput.value.trim() !== '';
+
+            // Button is enabled if all text fields are filled AND no photo upload is in progress AND photo upload was successful (if attempted)
+            saveProfileBtn.disabled = !(allRequiredFieldsFilled && !photoUploadInProgress && isPhotoUploadSuccessful);
+
+            if (!saveProfileBtn.disabled) {
+                // Clear any previous validation messages if form becomes valid
+                if (messageDiv.classList.contains('warning')) {
+                    messageDiv.style.display = 'none';
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             const studentNameInput = document.getElementById('studentName');
             const studentIdInput = document.getElementById('studentId');
@@ -258,6 +298,8 @@
             const currentPhotoPreview = document.getElementById('currentPhotoPreview');
             const profileForm = document.getElementById('profileForm');
             const messageDiv = document.getElementById('message');
+            const saveProfileBtn = document.getElementById('saveProfileBtn');
+            const photoUploadStatus = document.getElementById('photoUploadStatus');
 
             const loggedInStudentId = sessionStorage.getItem('loggedInStudentId');
             const loggedInStudentName = sessionStorage.getItem('loggedInStudentName');
@@ -300,10 +342,17 @@
                             const filePreview = storage.getFileView(BUCKET_ID, currentPhotoFileId);
                             currentPhotoPreview.src = filePreview.href;
                             currentPhotoPreview.style.display = 'block';
+                            photoUploadStatus.textContent = 'Current photo loaded.';
+                            photoUploadStatus.className = 'success';
                         } catch (fileError) {
                             console.warn('Could not load photo preview:', fileError);
                             currentPhotoPreview.style.display = 'none';
+                            photoUploadStatus.textContent = 'Could not load current photo.';
+                            photoUploadStatus.className = 'error';
                         }
+                    } else {
+                        photoUploadStatus.textContent = 'No photo uploaded yet.';
+                        photoUploadStatus.className = '';
                     }
                 }
             } catch (error) {
@@ -311,8 +360,83 @@
                 displayMessage('Failed to load existing profile data. Please try again.', 'error');
             }
 
+            // Initial check to set button state after loading existing data
+            checkFormValidityAndToggleSaveButton();
+
+            // Event listeners for input changes to dynamically enable/disable the button
+            const formInputs = [stdInput, dobInput, mobInput, schoolInput, addressInput];
+            formInputs.forEach(input => {
+                input.addEventListener('input', checkFormValidityAndToggleSaveButton);
+            });
+
+            photoInput.addEventListener('change', async () => {
+                const photoFile = photoInput.files[0];
+                if (photoFile) {
+                    photoUploadInProgress = true;
+                    isPhotoUploadSuccessful = false;
+                    photoUploadStatus.textContent = 'Uploading...';
+                    photoUploadStatus.className = 'uploading';
+                    checkFormValidityAndToggleSaveButton(); // Disable button during upload
+
+                    try {
+                        // Upload new photo
+                        const uploadedFile = await storage.createFile(
+                            BUCKET_ID,
+                            ID.unique(),
+                            photoFile
+                        );
+                        // No need to set photoIdToSave here, it will be handled in form submit
+                        // Update currentPhotoFileId temporarily for preview purposes
+                        currentPhotoFileId = uploadedFile.$id;
+
+                        const filePreview = storage.getFileView(BUCKET_ID, uploadedFile.$id);
+                        currentPhotoPreview.src = filePreview.href;
+                        currentPhotoPreview.style.display = 'block';
+
+                        photoUploadInProgress = false;
+                        isPhotoUploadSuccessful = true;
+                        photoUploadStatus.textContent = 'Uploaded! ✅';
+                        photoUploadStatus.className = 'success';
+                    } catch (uploadError) {
+                        console.error("Error uploading photo:", uploadError);
+                        photoUploadInProgress = false;
+                        isPhotoUploadSuccessful = false; // Mark as failed
+                        photoUploadStatus.textContent = 'Upload Failed! ❌';
+                        photoUploadStatus.className = 'error';
+                        displayMessage('Failed to upload photo. Please try again.', 'error');
+                    } finally {
+                        checkFormValidityAndToggleSaveButton(); // Re-check button state after upload attempt
+                    }
+                } else if (photoInput.value === '' && currentPhotoFileId) {
+                    // User cleared the file input and there was an existing photo
+                    // This action should also be reflected in the button state
+                    photoUploadStatus.textContent = 'Photo cleared. Saving will remove it.';
+                    photoUploadStatus.className = 'info';
+                    // We don't mark photo upload as "in progress" or "failed" if user explicitly clears it.
+                    // Instead, rely on the submit handler to delete the old photo.
+                    currentPhotoFileId = null; // Clear preview
+                    currentPhotoPreview.style.display = 'none';
+                    isPhotoUploadSuccessful = true; // No photo to upload, so it's "successful" in that sense
+                    checkFormValidityAndToggleSaveButton();
+                } else {
+                    // No photo selected and no current photo
+                    photoUploadStatus.textContent = 'No photo selected.';
+                    photoUploadStatus.className = '';
+                    isPhotoUploadSuccessful = true;
+                    checkFormValidityAndToggleSaveButton();
+                }
+            });
+
+
             profileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                // Prevent submission if the button is disabled (meaning conditions are not met)
+                if (saveProfileBtn.disabled) {
+                    displayMessage('Please fill all required fields and ensure photo upload is complete.', 'warning');
+                    return;
+                }
+
                 displayMessage('Saving profile...', 'info');
 
                 const studentStd = stdInput.value.trim();
@@ -322,59 +446,55 @@
                 const studentAddress = addressInput.value.trim();
                 const photoFile = photoInput.files[0];
 
-                let photoIdToSave = currentPhotoFileId; // Default to existing photo ID
+                let photoIdToSave = currentPhotoFileId; // Default to existing photo ID if not changed
 
-                // Handle photo upload/removal
-                if (photoFile) {
+                // This block now primarily handles deletion of old photo if a new one was uploaded,
+                // or if the user cleared the input. The actual new photo upload is handled in the `photoInput` change listener.
+                if (photoFile && currentPhotoFileId && currentPhotoFileId !== photoIdToSave) {
+                    // A new photo was successfully uploaded in the change listener, and an old one exists.
+                    // Delete the old photo.
                     try {
-                        // Upload new photo
-                        const uploadedFile = await storage.createFile(
-                            BUCKET_ID,
-                            ID.unique(),
-                            photoFile
-                        );
-                        photoIdToSave = uploadedFile.$id;
-
-                        // If there was an old photo, delete it
-                        if (currentPhotoFileId) {
-                            try {
-                                await storage.deleteFile(BUCKET_ID, currentPhotoFileId);
-                                console.log('Old photo deleted successfully.');
-                            } catch (deleteError) {
-                                console.warn('Could not delete old photo:', deleteError);
-                            }
-                        }
-                    } catch (uploadError) {
-                        console.error("Error uploading photo:", uploadError);
-                        displayMessage('Failed to upload photo. Please try again.', 'error');
-                        return;
+                        await storage.deleteFile(BUCKET_ID, currentPhotoFileId);
+                        console.log('Old photo deleted successfully.');
+                    } catch (deleteError) {
+                        console.warn('Could not delete old photo:', deleteError);
+                        // Still proceed with saving other profile data even if old photo deletion fails
                     }
-                } else if (photoInput.value === '' && currentPhotoFileId) {
-                    // User cleared the file input and there was an existing photo
+                } else if (!photoFile && photoInput.value === '' && currentPhotoFileId) {
+                    // User cleared the file input AND there was an existing photo.
+                    // Delete the existing photo from storage.
                     try {
                         await storage.deleteFile(BUCKET_ID, currentPhotoFileId);
                         photoIdToSave = null; // Set to null as no photo is linked now
-                        console.log('Photo removed successfully.');
+                        console.log('Photo removed successfully from storage.');
                     } catch (deleteError) {
-                        console.warn('Could not remove photo:', deleteError);
+                        console.warn('Could not remove photo from storage:', deleteError);
                         // Still proceed with saving other profile data even if photo deletion fails
                     }
                 }
 
+                // If a new photo was uploaded via the change listener, photoIdToSave should already be updated
+                // by the `currentPhotoFileId` variable (which holds the ID of the last successfully uploaded photo).
+                // If photoFile is present, use its ID. Otherwise, use `currentPhotoFileId` (which could be null if cleared).
+                if (photoFile && isPhotoUploadSuccessful) { // Ensure photo was actually uploaded successfully
+                    photoIdToSave = currentPhotoFileId; // Use the ID from the successful upload in the change listener
+                } else if (!photoFile && photoInput.value === '') {
+                    photoIdToSave = null; // No new photo, and input cleared, so ensure no photo is linked
+                }
+
+
                 const dataToUpdate = {
                     std: studentStd,
                     dob: studentDob,
-                    mob: studentMob, // Changed from parseFloat(studentMob)
+                    mob: studentMob,
                     school: studentSchool,
                     add: studentAddress,
-                    photoId: photoIdToSave, // Save the new or existing photo ID
+                    photoId: photoIdToSave, // Save the new or existing photo ID, or null
                 };
 
                 try {
                     if (!studentDocumentId) {
                         // Create a new document if it doesn't exist
-                        // This case should ideally be handled during login/initial record creation,
-                        // but included as a fallback.
                         await databases.createDocument(
                             DATABASE_ID,
                             COLLECTION_ID,
@@ -397,7 +517,7 @@
 
                     displayMessage('Profile updated successfully!', 'success');
                     // Update currentPhotoFileId after successful save
-                    currentPhotoFileId = photoIdToSave;
+                    currentPhotoFileId = photoIdToSave; // Ensure this is up-to-date for subsequent edits
                     setTimeout(() => {
                         window.location.href = 'record.html';
                     }, 2000);
