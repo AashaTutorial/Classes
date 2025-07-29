@@ -338,6 +338,78 @@
         .dropdown.show .dropdown-content {
             display: block;
         }
+
+        /* Styles for delayed payment input section */
+        #delayedPaymentSection {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color-light);
+            border-radius: 8px;
+            background-color: var(--card-bg-light);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        [data-theme="dark"] #delayedPaymentSection {
+            border-color: var(--border-color-dark);
+            background-color: var(--card-bg-dark);
+        }
+
+        #delayedPaymentSection label {
+            color: var(--text-color-light);
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        [data-theme="dark"] #delayedPaymentSection label {
+            color: var(--text-color-dark);
+        }
+
+        #delayedPaymentSection input[type="text"],
+        #delayedPaymentSection input[type="date"],
+        #delayedPaymentSection textarea {
+            padding: 8px;
+            border: 1px solid var(--border-color-light);
+            border-radius: 4px;
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        [data-theme="dark"] #delayedPaymentSection input[type="text"],
+        [data-theme="dark"] #delayedPaymentSection input[type="date"],
+        [data-theme="dark"] #delayedPaymentSection textarea {
+            border-color: var(--border-color-dark);
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+        }
+
+        #delayedPaymentSection button {
+            background-color: var(--accent-color-light);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            align-self: flex-start; /* Align button to the start */
+            transition: background-color 0.3s ease, opacity 0.3s ease;
+        }
+        [data-theme="dark"] #delayedPaymentSection button {
+            background-color: var(--accent-color-dark);
+            color: var(--text-color-dark);
+        }
+        #delayedPaymentSection button:hover {
+            opacity: 0.9;
+        }
+
+        #saveMessage {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: left;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
 </head>
@@ -396,6 +468,17 @@
                     </tbody>
             </table>
             <div id="pendingFeesStatement"></div>
+            <!-- New section for delayed payment inputs, initially hidden -->
+            <div id="delayedPaymentSection" style="display: none;">
+                <label for="reasonInput">Reason for delayed fees payment:</label>
+                <textarea id="reasonInput" rows="3" placeholder="e.g., Family emergency, temporary financial difficulty"></textarea>
+
+                <label for="expDateInput">Expected date when fees will be paid:</label>
+                <input type="date" id="expDateInput">
+
+                <button id="saveDelayedPaymentBtn">Save Reason & Expected Date</button>
+                <p id="saveMessage"></p>
+            </div>
         </div>
     </div>
 
@@ -418,6 +501,15 @@
                 }
             }
             return null; // Return null for invalid or unparseable formats
+        }
+
+        // Function to format Date object to YYYY-MM-DD string for input[type="date"]
+        function formatDateToYYYYMMDD(dateObj) {
+            if (!dateObj) return '';
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
 
         // Appwrite Client Initialization
@@ -468,6 +560,11 @@
             const pendingFeesStatement = document.getElementById('pendingFeesStatement');
             const profileDropdown = document.getElementById('profileDropdown');
             const logoutBtn = document.getElementById('logoutBtn');
+            const delayedPaymentSection = document.getElementById('delayedPaymentSection'); // New
+            const reasonInput = document.getElementById('reasonInput'); // New
+            const expDateInput = document.getElementById('expDateInput'); // New
+            const saveDelayedPaymentBtn = document.getElementById('saveDelayedPaymentBtn'); // New
+            const saveMessage = document.getElementById('saveMessage'); // New
 
             // Toggle dropdown visibility
             profileDropdown.querySelector('.profile-dropdown-btn').addEventListener('click', (event) => {
@@ -522,6 +619,7 @@
                 }
 
                 const studentData = response.documents[0];
+                const studentDocumentId = studentData.$id; // Get the document ID for updates
 
                 // --- Profile Completion Check ---
                 let isProfileComplete = true;
@@ -602,6 +700,7 @@
                     today.setHours(0, 0, 0, 0); // Normalize today's date to start of day for accurate comparison
 
                     let pendingMonthsCount = 0; // Initialize counter for pending months
+                    let isMoreThan10DaysOverdue = false; // Flag for overdue by more than 10 days
 
                     academicMonths.forEach(monthYear => {
                         const row = feesTableBody.insertRow();
@@ -634,6 +733,7 @@
                                 }
 
                                 calculatedDueDateObj = new Date(nextYear, nextMonthIndex, joinDay);
+                                calculatedDueDateObj.setHours(0, 0, 0, 0); // Normalize due date
 
                                 const dd = String(calculatedDueDateObj.getDate()).padStart(2, '0');
                                 const mm = String(calculatedDueDateObj.getMonth() + 1).padStart(2, '0');
@@ -663,6 +763,14 @@
                                     statusCell.classList.add('status-unpaid');
                                     row.classList.add('unpaid-overdue-row');
                                     pendingMonthsCount++; // Increment if unpaid and overdue/due today
+
+                                    // Check if overdue by more than 10 days
+                                    const diffTime = Math.abs(today - calculatedDueDateObj);
+                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                    if (diffDays > 10) {
+                                        isMoreThan10DaysOverdue = true;
+                                    }
+
                                 } else {
                                     // Month is Not Due (upcoming)
                                     statusCell.textContent = 'Not Due';
@@ -686,10 +794,64 @@
                         pendingFeesStatement.textContent = `Note: Your ${pendingMonthsCount} month fees ₹${totalPendingAmount} is pending`;
                         pendingFeesStatement.classList.add('red-text');
                         pendingFeesStatement.classList.remove('green-text');
+
+                        // Show delayed payment input fields if overdue by more than 10 days
+                        if (isMoreThan10DaysOverdue) {
+                            delayedPaymentSection.style.display = 'flex'; // Use flex to maintain column layout
+
+                            // Pre-fill fields if data exists in Appwrite
+                            if (studentData.reason) {
+                                reasonInput.value = studentData.reason;
+                            }
+                            if (studentData.expDate) {
+                                // Attempt to parse DD/MM/YYYY and format to YYYY-MM-DD for input[type="date"]
+                                const parsedExpDate = parseDMYtoDate(studentData.expDate);
+                                if (parsedExpDate) {
+                                    expDateInput.value = formatDateToYYYYMMDD(parsedExpDate);
+                                } else {
+                                    // If not DD/MM/YYYY, assume it might already be YYYY-MM-DD or another format the input can handle
+                                    expDateInput.value = studentData.expDate;
+                                }
+                            }
+
+                            // Add event listener for save button
+                            saveDelayedPaymentBtn.addEventListener('click', async () => {
+                                const reason = reasonInput.value.trim();
+                                const expDate = expDateInput.value; // This will be in YYYY-MM-DD format from input[type="date"]
+
+                                if (!reason && !expDate) {
+                                    saveMessage.textContent = 'Please enter at least a reason or an expected date.';
+                                    saveMessage.style.color = 'orange';
+                                    return;
+                                }
+
+                                try {
+                                    await databases.updateDocument(
+                                        DATABASE_ID,
+                                        COLLECTION_ID,
+                                        studentDocumentId, // Use the document ID obtained earlier
+                                        {
+                                            reason: reason,
+                                            expDate: expDate
+                                        }
+                                    );
+                                    saveMessage.textContent = 'Information saved successfully!';
+                                    saveMessage.style.color = 'green';
+                                } catch (saveError) {
+                                    console.error('Error saving delayed payment info:', saveError);
+                                    saveMessage.textContent = 'Failed to save information. Please try again.';
+                                    saveMessage.style.color = 'red';
+                                }
+                            });
+                        } else {
+                            delayedPaymentSection.style.display = 'none'; // Hide if not overdue by >10 days
+                        }
+
                     } else {
                         pendingFeesStatement.textContent = "Note: You don't have any pending fees due.";
                         pendingFeesStatement.classList.add('green-text');
                         pendingFeesStatement.classList.remove('red-text');
+                        delayedPaymentSection.style.display = 'none'; // Hide if no pending fees
                     }
 
                 }
