@@ -704,7 +704,7 @@
                 // This function now expects expDate in DD/MM/YYYY format for display
                 const updateDelayButtonState = (reason, expDateDDMMYYYY) => {
                     if (reason && expDateDDMMYYYY) {
-                        delayInfoBtn.textContent = `Reason mentioned for delay "${reason}" <br> You have promised to pay on "${expDateDDMMYYYY}".`;
+                        delayInfoBtn.textContent = `Reason for delay "${reason}".You have promised to pay on "${expDateDDMMYYYY}".`;
                         delayInfoBtn.disabled = true;
                         delayInfoBtn.style.cursor = 'not-allowed';
                     } else {
