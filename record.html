@@ -27,6 +27,13 @@
             /* New variables for pending fees statement */
             --pending-fees-text-red: red;
             --pending-fees-text-green: green;
+
+            /* New variables for the delayed payment button */
+            --delay-btn-bg-light: #FFC107; /* Warning yellow */
+            --delay-btn-text-light: #343A40; /* Dark text for contrast */
+            --delay-btn-disabled-bg-light: #E0E0E0; /* Light gray for disabled */
+            --delay-btn-disabled-text-light: #707070; /* Darker gray for disabled text */
+            --delay-dropdown-border-light: #FFC107; /* Border matching button */
         }
 
         [data-theme="dark"] {
@@ -49,6 +56,13 @@
             /* New variables for pending fees statement */
             --pending-fees-text-red: #FF6347; /* Tomato red for dark theme */
             --pending-fees-text-green: #90EE90; /* Light green for dark theme */
+
+            /* New variables for the delayed payment button */
+            --delay-btn-bg-dark: #D4AC0D; /* Darker yellow for dark theme */
+            --delay-btn-text-dark: #F5EFEA; /* Light text */
+            --delay-btn-disabled-bg-dark: #505050; /* Darker gray for disabled */
+            --delay-btn-disabled-text-dark: #A0A0A0; /* Lighter gray for disabled text */
+            --delay-dropdown-border-dark: #D4AC0D;
         }
 
         body {
@@ -277,8 +291,8 @@
             display: inline-block;
         }
 
-        .profile-dropdown-btn {
-            background-color: var(--accent-color-light); /* Use accent color for button */
+        .profile-dropdown-btn, .delay-info-btn { /* Apply common styles to both dropdown buttons */
+            background-color: var(--accent-color-light); /* Use accent color for profile button */
             color: white;
             padding: 8px 15px;
             border: none;
@@ -294,7 +308,8 @@
             background-color: var(--accent-color-dark);
             color: var(--text-color-dark);
         }
-        .profile-dropdown-btn:hover {
+
+        .profile-dropdown-btn:hover, .delay-info-btn:hover:not(:disabled) {
             opacity: 0.9;
         }
 
@@ -339,35 +354,81 @@
             display: block;
         }
 
-        /* Styles for delayed payment input section */
-        #delayedPaymentSection {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid var(--border-color-light);
-            border-radius: 8px;
-            background-color: var(--card-bg-light);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            transition: border-color 0.3s ease, background-color 0.3s ease;
+        /* Styles for the new delayed payment button */
+        .delay-info-btn {
+            background-color: var(--delay-btn-bg-light);
+            color: var(--delay-btn-text-light);
+            padding: 10px 15px;
+            font-size: 1em;
+            margin-top: 15px;
+            display: block; /* Make it a block element to take full width or be centered */
+            width: fit-content; /* Adjust width to content */
+            margin-left: auto; /* Center the button */
+            margin-right: auto; /* Center the button */
+            text-align: center;
         }
-        [data-theme="dark"] #delayedPaymentSection {
-            border-color: var(--border-color-dark);
-            background-color: var(--card-bg-dark);
+        [data-theme="dark"] .delay-info-btn {
+            background-color: var(--delay-btn-bg-dark);
+            color: var(--delay-btn-text-dark);
         }
 
-        #delayedPaymentSection label {
+        .delay-info-btn:disabled {
+            background-color: var(--delay-btn-disabled-bg-light);
+            color: var(--delay-btn-disabled-text-light);
+            cursor: not-allowed;
+            opacity: 1; /* Ensure opacity is not reduced by hover effect */
+        }
+        [data-theme="dark"] .delay-info-btn:disabled {
+            background-color: var(--delay-btn-disabled-bg-dark);
+            color: var(--delay-btn-disabled-text-dark);
+        }
+
+        /* Styles for the delayed payment input dropdown content */
+        .delay-input-dropdown-container {
+            position: relative; /* Needed for positioning the actual dropdown content */
+            margin-top: 10px; /* Space below the button */
+            text-align: center; /* To center the button within its flow */
+        }
+
+        .delay-input-dropdown-content {
+            display: none; /* Hidden by default */
+            position: absolute;
+            width: 90%; /* Adjust width as needed */
+            left: 50%;
+            transform: translateX(-50%); /* Center the dropdown */
+            background-color: var(--card-bg-light);
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--delay-dropdown-border-light); /* Added border */
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            text-align: left; /* Reset text alignment for content */
+            margin-top: 10px; /* Space between button and dropdown content */
+        }
+        [data-theme="dark"] .delay-input-dropdown-content {
+            background-color: var(--card-bg-dark);
+            border: 1px solid var(--delay-dropdown-border-dark);
+        }
+
+        .delay-input-dropdown-content.show {
+            display: flex; /* Use flexbox for internal layout (column) */
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .delay-input-dropdown-content label {
             color: var(--text-color-light);
             font-weight: bold;
             transition: color 0.3s ease;
         }
-        [data-theme="dark"] #delayedPaymentSection label {
+        [data-theme="dark"] .delay-input-dropdown-content label {
             color: var(--text-color-dark);
         }
 
-        #delayedPaymentSection input[type="text"],
-        #delayedPaymentSection input[type="date"],
-        #delayedPaymentSection textarea {
+        .delay-input-dropdown-content input[type="text"],
+        .delay-input-dropdown-content input[type="date"],
+        .delay-input-dropdown-content textarea {
             padding: 8px;
             border: 1px solid var(--border-color-light);
             border-radius: 4px;
@@ -377,15 +438,15 @@
             box-sizing: border-box;
             transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
         }
-        [data-theme="dark"] #delayedPaymentSection input[type="text"],
-        [data-theme="dark"] #delayedPaymentSection input[type="date"],
-        [data-theme="dark"] #delayedPaymentSection textarea {
+        [data-theme="dark"] .delay-input-dropdown-content input[type="text"],
+        [data-theme="dark"] .delay-input-dropdown-content input[type="date"],
+        [data-theme="dark"] .delay-input-dropdown-content textarea {
             border-color: var(--border-color-dark);
             background-color: var(--bg-color-dark);
             color: var(--text-color-dark);
         }
 
-        #delayedPaymentSection button {
+        .delay-input-dropdown-content button {
             background-color: var(--accent-color-light);
             color: white;
             padding: 10px 20px;
@@ -397,11 +458,11 @@
             align-self: flex-start; /* Align button to the start */
             transition: background-color 0.3s ease, opacity 0.3s ease;
         }
-        [data-theme="dark"] #delayedPaymentSection button {
+        [data-theme="dark"] .delay-input-dropdown-content button {
             background-color: var(--accent-color-dark);
             color: var(--text-color-dark);
         }
-        #delayedPaymentSection button:hover {
+        .delay-input-dropdown-content button:hover {
             opacity: 0.9;
         }
 
@@ -468,16 +529,19 @@
                     </tbody>
             </table>
             <div id="pendingFeesStatement"></div>
-            <!-- New section for delayed payment inputs, initially hidden -->
-            <div id="delayedPaymentSection" style="display: none;">
-                <label for="reasonInput">Reason for delayed fees payment:</label>
-                <textarea id="reasonInput" rows="3" placeholder="e.g., Family emergency, temporary financial difficulty"></textarea>
 
-                <label for="expDateInput">Expected date when fees will be paid:</label>
-                <input type="date" id="expDateInput">
+            <div id="delayInputBtnContainer" class="delay-input-dropdown-container" style="display: none;">
+                <button id="delayInfoBtn" class="delay-info-btn">Click here to enter reason for delay and expected date of payment</button>
+                <div id="delayedPaymentSection" class="delay-input-dropdown-content">
+                    <label for="reasonInput">Reason for delayed fees payment:</label>
+                    <textarea id="reasonInput" rows="3" placeholder="e.g., Family emergency, temporary financial difficulty"></textarea>
 
-                <button id="saveDelayedPaymentBtn">Save Reason & Expected Date</button>
-                <p id="saveMessage"></p>
+                    <label for="expDateInput">Expected date when fees will be paid:</label>
+                    <input type="date" id="expDateInput">
+
+                    <button id="saveDelayedPaymentBtn">Save Reason & Expected Date</button>
+                    <p id="saveMessage"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -560,22 +624,30 @@
             const pendingFeesStatement = document.getElementById('pendingFeesStatement');
             const profileDropdown = document.getElementById('profileDropdown');
             const logoutBtn = document.getElementById('logoutBtn');
-            const delayedPaymentSection = document.getElementById('delayedPaymentSection'); // New
-            const reasonInput = document.getElementById('reasonInput'); // New
-            const expDateInput = document.getElementById('expDateInput'); // New
-            const saveDelayedPaymentBtn = document.getElementById('saveDelayedPaymentBtn'); // New
-            const saveMessage = document.getElementById('saveMessage'); // New
 
-            // Toggle dropdown visibility
+            // New elements for delayed payment button and dropdown
+            const delayInputBtnContainer = document.getElementById('delayInputBtnContainer');
+            const delayInfoBtn = document.getElementById('delayInfoBtn');
+            const delayedPaymentSection = document.getElementById('delayedPaymentSection');
+            const reasonInput = document.getElementById('reasonInput');
+            const expDateInput = document.getElementById('expDateInput');
+            const saveDelayedPaymentBtn = document.getElementById('saveDelayedPaymentBtn');
+            const saveMessage = document.getElementById('saveMessage');
+
+            // Toggle profile dropdown visibility
             profileDropdown.querySelector('.profile-dropdown-btn').addEventListener('click', (event) => {
                 event.stopPropagation(); // Prevent click from immediately closing it
                 profileDropdown.classList.toggle('show');
             });
 
-            // Close dropdown if clicked outside
+            // Close dropdowns if clicked outside
             window.addEventListener('click', (event) => {
                 if (!profileDropdown.contains(event.target)) {
                     profileDropdown.classList.remove('show');
+                }
+                // Close delay input dropdown if clicked outside its container
+                if (delayInputBtnContainer.style.display !== 'none' && !delayInputBtnContainer.contains(event.target)) {
+                    delayedPaymentSection.classList.remove('show');
                 }
             });
 
@@ -601,8 +673,6 @@
                 );
 
                 if (response.documents.length === 0) {
-                    // Should not happen if login was successful, but handle
-                    // Using a custom message box instead of alert()
                     const messageBox = document.createElement('div');
                     messageBox.style.cssText = `
                         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -621,9 +691,21 @@
                 const studentData = response.documents[0];
                 const studentDocumentId = studentData.$id; // Get the document ID for updates
 
+                // Function to update the delayed payment button state
+                const updateDelayButtonState = (reason, expDate) => {
+                    if (reason && expDate) {
+                        delayInfoBtn.textContent = `You have informed the reason as "${reason}" for delay and promised to pay on "${expDate}".`;
+                        delayInfoBtn.disabled = true;
+                        delayInfoBtn.style.cursor = 'not-allowed';
+                    } else {
+                        delayInfoBtn.textContent = 'Click here to enter reason for delay and expected date of payment';
+                        delayInfoBtn.disabled = false;
+                        delayInfoBtn.style.cursor = 'pointer';
+                    }
+                };
+
                 // --- Profile Completion Check ---
                 let isProfileComplete = true;
-                // Updated: Include 'photoId' in the profile completion check
                 const attributesToCheck = ['std', 'dob', 'mob', 'school', 'add', 'photoId'];
 
                 for (const attr of attributesToCheck) {
@@ -636,6 +718,7 @@
                 if (!isProfileComplete) {
                     studentDetailsSection.style.display = 'none';
                     feesDetailsSection.style.display = 'none';
+                    delayInputBtnContainer.style.display = 'none'; // Hide the new button container too
                     completeProfileSection.style.display = 'block';
                 } else {
                     completeProfileSection.style.display = 'none';
@@ -795,24 +878,36 @@
                         pendingFeesStatement.classList.add('red-text');
                         pendingFeesStatement.classList.remove('green-text');
 
-                        // Show delayed payment input fields if overdue by more than 10 days
+                        // Show delayed payment button container if overdue by more than 10 days
                         if (isMoreThan10DaysOverdue) {
-                            delayedPaymentSection.style.display = 'flex'; // Use flex to maintain column layout
+                            delayInputBtnContainer.style.display = 'block'; // Show the container
 
-                            // Pre-fill fields if data exists in Appwrite
-                            if (studentData.reason) {
-                                reasonInput.value = studentData.reason;
-                            }
-                            if (studentData.expDate) {
-                                // Attempt to parse DD/MM/YYYY and format to YYYY-MM-DD for input[type="date"]
-                                const parsedExpDate = parseDMYtoDate(studentData.expDate);
+                            // Pre-fill fields and update button state based on existing data
+                            const existingReason = studentData.reason || '';
+                            const existingExpDate = studentData.expDate || '';
+                            reasonInput.value = existingReason;
+                            
+                            // Format existingExpDate for the input type="date" if it exists
+                            if (existingExpDate) {
+                                const parsedExpDate = parseDMYtoDate(existingExpDate);
                                 if (parsedExpDate) {
                                     expDateInput.value = formatDateToYYYYMMDD(parsedExpDate);
                                 } else {
-                                    // If not DD/MM/YYYY, assume it might already be YYYY-MM-DD or another format the input can handle
-                                    expDateInput.value = studentData.expDate;
+                                    expDateInput.value = existingExpDate; // Fallback if format is not DD/MM/YYYY
                                 }
+                            } else {
+                                expDateInput.value = ''; // Ensure it's empty if no date
                             }
+                            
+                            updateDelayButtonState(existingReason, existingExpDate);
+
+                            // Toggle delayed payment section visibility
+                            delayInfoBtn.addEventListener('click', (event) => {
+                                event.stopPropagation(); // Prevent click from immediately closing it
+                                if (!delayInfoBtn.disabled) { // Only toggle if button is not disabled
+                                    delayedPaymentSection.classList.toggle('show');
+                                }
+                            });
 
                             // Add event listener for save button
                             saveDelayedPaymentBtn.addEventListener('click', async () => {
@@ -837,6 +932,11 @@
                                     );
                                     saveMessage.textContent = 'Information saved successfully!';
                                     saveMessage.style.color = 'green';
+                                    
+                                    // Update button state after successful save
+                                    updateDelayButtonState(reason, expDate);
+                                    delayedPaymentSection.classList.remove('show'); // Hide the dropdown after saving
+
                                 } catch (saveError) {
                                     console.error('Error saving delayed payment info:', saveError);
                                     saveMessage.textContent = 'Failed to save information. Please try again.';
@@ -844,21 +944,20 @@
                                 }
                             });
                         } else {
-                            delayedPaymentSection.style.display = 'none'; // Hide if not overdue by >10 days
+                            delayInputBtnContainer.style.display = 'none'; // Hide if not overdue by >10 days
                         }
 
                     } else {
                         pendingFeesStatement.textContent = "Note: You don't have any pending fees due.";
                         pendingFeesStatement.classList.add('green-text');
                         pendingFeesStatement.classList.remove('red-text');
-                        delayedPaymentSection.style.display = 'none'; // Hide if no pending fees
+                        delayInputBtnContainer.style.display = 'none'; // Hide if no pending fees
                     }
 
                 }
 
             } catch (error) {
                 console.error("Error fetching student record:", error);
-                // Using a custom message box instead of alert()
                 const messageBox = document.createElement('div');
                 messageBox.style.cssText = `
                     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
