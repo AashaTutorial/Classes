@@ -547,34 +547,43 @@
     </div>
 
     <script>
-        // Function to parse DD/MM/YYYY string into a Date object
+        // Function to parse DD/MM/YYYY string into a Date object (if needed elsewhere)
+        // This function is generally used for internal date comparisons, not directly for input values.
         function parseDMYtoDate(dateString) {
             if (!dateString) return null;
             const parts = dateString.split('/');
-            // Check if parts array has exactly 3 elements (day, month, year)
             if (parts.length === 3) {
                 const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed in JavaScript Date
+                const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
                 const year = parseInt(parts[2], 10);
                 const date = new Date(year, month, day);
-
-                // Validate if the parsed date is actually correct
-                // This checks if the date components match the input, preventing invalid dates like Feb 30
                 if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
                     return date;
                 }
             }
-            return null; // Return null for invalid or unparseable formats
+            return null;
         }
 
-        // Function to format Date object to YYYY-MM-DD string for input[type="date"]
-        function formatDateToYYYYMMDD(dateObj) {
-            if (!dateObj) return '';
-            const year = dateObj.getFullYear();
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+        // NEW: Function to format DD/MM/YYYY string to YYYY-MM-DD string (for input type="date" value)
+        function formatDDMMYYYYToYYYYMMDD(dateString) {
+            if (!dateString) return '';
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`; // YYYY-MM-DD
+            }
+            return ''; // Return empty if format is unexpected
         }
+
+        // NEW: Function to format YYYY-MM-DD string to DD/MM/YYYY string (for display and storage)
+        function formatYYYYMMDDToDDMMYYYY(dateString) {
+            if (!dateString) return '';
+            const parts = dateString.split('-'); // Split by hyphen for YYYY-MM-DD
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
+            }
+            return dateString; // Return original if format is unexpected
+        }
+
 
         // Appwrite Client Initialization
         const client = new Appwrite.Client();
@@ -645,7 +654,7 @@
                 if (!profileDropdown.contains(event.target)) {
                     profileDropdown.classList.remove('show');
                 }
-                // Close delay input dropdown if clicked outside its container
+                // Close delay input dropdown if clicked outside its container, and it's visible
                 if (delayInputBtnContainer.style.display !== 'none' && !delayInputBtnContainer.contains(event.target)) {
                     delayedPaymentSection.classList.remove('show');
                 }
@@ -692,9 +701,10 @@
                 const studentDocumentId = studentData.$id; // Get the document ID for updates
 
                 // Function to update the delayed payment button state
-                const updateDelayButtonState = (reason, expDate) => {
-                    if (reason && expDate) {
-                        delayInfoBtn.textContent = `You have informed the reason as "${reason}" for delay and promised to pay on "${expDate}".`;
+                // This function now expects expDate in DD/MM/YYYY format for display
+                const updateDelayButtonState = (reason, expDateDDMMYYYY) => {
+                    if (reason && expDateDDMMYYYY) {
+                        delayInfoBtn.textContent = `You have informed the reason as "${reason}" for delay and promised to pay on "${expDateDDMMYYYY}".`;
                         delayInfoBtn.disabled = true;
                         delayInfoBtn.style.cursor = 'not-allowed';
                     } else {
@@ -882,24 +892,15 @@
                         if (isMoreThan10DaysOverdue) {
                             delayInputBtnContainer.style.display = 'block'; // Show the container
 
-                            // Pre-fill fields and update button state based on existing data
                             const existingReason = studentData.reason || '';
-                            const existingExpDate = studentData.expDate || '';
+                            const existingExpDateDDMMYYYY = studentData.expDate || ''; // This is already in DD/MM/YYYY
+
                             reasonInput.value = existingReason;
+                            // Convert DD/MM/YYYY to YYYY-MM-DD for the input type="date" value
+                            expDateInput.value = formatDDMMYYYYToYYYYMMDD(existingExpDateDDMMYYYY);
                             
-                            // Format existingExpDate for the input type="date" if it exists
-                            if (existingExpDate) {
-                                const parsedExpDate = parseDMYtoDate(existingExpDate);
-                                if (parsedExpDate) {
-                                    expDateInput.value = formatDateToYYYYMMDD(parsedExpDate);
-                                } else {
-                                    expDateInput.value = existingExpDate; // Fallback if format is not DD/MM/YYYY
-                                }
-                            } else {
-                                expDateInput.value = ''; // Ensure it's empty if no date
-                            }
-                            
-                            updateDelayButtonState(existingReason, existingExpDate);
+                            // Update button state using the DD/MM/YYYY format for display
+                            updateDelayButtonState(existingReason, existingExpDateDDMMYYYY);
 
                             // Toggle delayed payment section visibility
                             delayInfoBtn.addEventListener('click', (event) => {
@@ -912,13 +913,16 @@
                             // Add event listener for save button
                             saveDelayedPaymentBtn.addEventListener('click', async () => {
                                 const reason = reasonInput.value.trim();
-                                const expDate = expDateInput.value; // This will be in YYYY-MM-DD format from input[type="date"]
+                                const expDateYYYYMMDD = expDateInput.value; // This will be in YYYY-MM-DD from input[type="date"]
 
-                                if (!reason && !expDate) {
+                                if (!reason && !expDateYYYYMMDD) {
                                     saveMessage.textContent = 'Please enter at least a reason or an expected date.';
                                     saveMessage.style.color = 'orange';
                                     return;
                                 }
+                                
+                                // Convert YYYY-MM-DD back to DD/MM/YYYY for storage in Appwrite
+                                const expDateForAppwrite = formatYYYYMMDDToDDMMYYYY(expDateYYYYMMDD);
 
                                 try {
                                     await databases.updateDocument(
@@ -927,14 +931,14 @@
                                         studentDocumentId, // Use the document ID obtained earlier
                                         {
                                             reason: reason,
-                                            expDate: expDate
+                                            expDate: expDateForAppwrite // Save in DD/MM/YYYY
                                         }
                                     );
                                     saveMessage.textContent = 'Information saved successfully!';
                                     saveMessage.style.color = 'green';
                                     
-                                    // Update button state after successful save
-                                    updateDelayButtonState(reason, expDate);
+                                    // Update button state after successful save, using the DD/MM/YYYY format
+                                    updateDelayButtonState(reason, expDateForAppwrite);
                                     delayedPaymentSection.classList.remove('show'); // Hide the dropdown after saving
 
                                 } catch (saveError) {
