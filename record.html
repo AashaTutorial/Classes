@@ -773,11 +773,15 @@
                     const paidDates = studentData.paidDate || []; // Array of payment dates
                     const joinDateStr = studentData.joinDate;
                     let joinDay = null;
+                    let joinMonthIndex = null; // New: To store the 0-indexed joining month
+                    let joinYear = null; // New: To store the joining year
 
                     if (joinDateStr) {
                         const parts = joinDateStr.split('/');
                         if (parts.length === 3) {
                             joinDay = parseInt(parts[0], 10);
+                            joinMonthIndex = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+                            joinYear = parseInt(parts[2], 10);
                         }
                     }
 
@@ -804,35 +808,56 @@
 
                         monthCell.textContent = monthYear;
 
+                        // NEW LOGIC START: Check if the current academic month is before the joining month
+                        const monthNames = ["January", "February", "March", "April", "May", "June",
+                                            "July", "August", "September", "October", "November", "December"];
+                        const [currentMonthName, currentYearStr] = monthYear.split(' ');
+                        const currentMonthIndex = monthNames.indexOf(currentMonthName);
+                        const currentYear = parseInt(currentYearStr, 10);
+
+                        // Create a date object for the first day of the current academic month
+                        const academicMonthStartDate = new Date(currentYear, currentMonthIndex, 1);
+                        academicMonthStartDate.setHours(0,0,0,0);
+
+                        // Create a date object for the first day of the joining month
+                        let joiningMonthStartDate = null;
+                        if (joinMonthIndex !== null && joinYear !== null) {
+                            joiningMonthStartDate = new Date(joinYear, joinMonthIndex, 1);
+                            joiningMonthStartDate.setHours(0,0,0,0);
+                        }
+
+                        // If the current academic month is before the joining month, mark as N/A
+                        if (joiningMonthStartDate && academicMonthStartDate < joiningMonthStartDate) {
+                            statusCell.textContent = 'N/A (Joined Later)';
+                            dueDateCell.textContent = '-';
+                            dateOfPaymentCell.textContent = '-';
+                            row.classList.add('status-not-due'); // Use a neutral style
+                            return; // Skip further processing for this month
+                        }
+                        // NEW LOGIC END
+
+
                         // Calculate Due Date
                         let dueDateStr = 'N/A';
                         let calculatedDueDateObj = null;
 
                         if (joinDay) {
-                            const monthNames = ["January", "February", "March", "April", "May", "June",
-                                                "July", "August", "September", "October", "November", "December"];
-                            const [monthName, yearStr] = monthYear.split(' ');
-                            const currentMonthIndex = monthNames.indexOf(monthName);
-                            const currentYear = parseInt(yearStr, 10);
+                            // Due date is the 'joinDay' of the *next* month
+                            let nextMonthIndex = currentMonthIndex + 1;
+                            let nextYear = currentYear;
 
-                            if (currentMonthIndex !== -1) {
-                                // Due date is the 'joinDay' of the *next* month
-                                let nextMonthIndex = currentMonthIndex + 1;
-                                let nextYear = currentYear;
-
-                                if (nextMonthIndex > 11) { // If it rolls over to next year
-                                    nextMonthIndex = 0;
-                                    nextYear++;
-                                }
-
-                                calculatedDueDateObj = new Date(nextYear, nextMonthIndex, joinDay);
-                                calculatedDueDateObj.setHours(0, 0, 0, 0); // Normalize due date
-
-                                const dd = String(calculatedDueDateObj.getDate()).padStart(2, '0');
-                                const mm = String(calculatedDueDateObj.getMonth() + 1).padStart(2, '0');
-                                const yyyy = calculatedDueDateObj.getFullYear();
-                                dueDateStr = `${dd}/${mm}/${yyyy}`;
+                            if (nextMonthIndex > 11) { // If it rolls over to next year
+                                nextMonthIndex = 0;
+                                nextYear++;
                             }
+
+                            calculatedDueDateObj = new Date(nextYear, nextMonthIndex, joinDay);
+                            calculatedDueDateObj.setHours(0, 0, 0, 0); // Normalize due date
+
+                            const dd = String(calculatedDueDateObj.getDate()).padStart(2, '0');
+                            const mm = String(calculatedDueDateObj.getMonth() + 1).padStart(2, '0');
+                            const yyyy = calculatedDueDateObj.getFullYear();
+                            dueDateStr = `${dd}/${mm}/${yyyy}`;
                         }
                         dueDateCell.textContent = dueDateStr;
 
