@@ -828,8 +828,8 @@
 
                         // If the current academic month is before the joining month, mark as N/A
                         if (joiningMonthStartDate && academicMonthStartDate < joiningMonthStartDate) {
-                            statusCell.textContent = 'N/A (Joined Later)';
-                            dueDateCell.textContent = '-';
+                            statusCell.textContent = 'Not Applicable';
+                            dueDateCell.textContent = 'Joined Later';
                             dateOfPaymentCell.textContent = '-';
                             row.classList.add('status-not-due'); // Use a neutral style
                             return; // Skip further processing for this month
