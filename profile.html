@@ -86,7 +86,8 @@
         .form-group input[type="text"],
         .form-group input[type="date"],
         .form-group input[type="number"],
-        .form-group input[type="file"] {
+        .form-group input[type="file"],
+        .form-group select {
             width: calc(100% - 20px);
             padding: 10px;
             border: 1px solid var(--border-color-light);
@@ -99,7 +100,8 @@
         [data-theme="dark"] .form-group input[type="text"],
         [data-theme="dark"] .form-group input[type="date"],
         [data-theme="dark"] .form-group input[type="number"],
-        [data-theme="dark"] .form-group input[type="file"] {
+        [data-theme="dark"] .form-group input[type="file"],
+        [data-theme="dark"] .form-group select {
             background-color: var(--card-bg-dark);
             border-color: var(--border-color-dark);
             color: var(--text-color-dark);
@@ -107,6 +109,11 @@
 
         .form-group input[type="file"] {
             padding: 5px; /* Adjust padding for file input */
+        }
+        
+        .other-input {
+            margin-top: 10px;
+            display: none; /* Hidden by default */
         }
 
         .button-group {
@@ -198,7 +205,22 @@
             </div>
             <div class="form-group">
                 <label for="std">Standard:</label>
-                <input type="text" id="std" placeholder="e.g., 10th Standard" required>
+                <select id="std" required>
+                    <option value="" disabled selected>Select Standard</option>
+                    <option value="Nursery">Nursery</option>
+                    <option value="Jr. Kg.">Jr. Kg.</option>
+                    <option value="Sr. Kg.">Sr. Kg.</option>
+                    <option value="1st">1st</option>
+                    <option value="2nd">2nd</option>
+                    <option value="3rd">3rd</option>
+                    <option value="4th">4th</option>
+                    <option value="5th">5th</option>
+                    <option value="6th">6th</option>
+                    <option value="7th">7th</option>
+                    <option value="8th">8th</option>
+                    <option value="9th">9th</option>
+                    <option value="10th">10th</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="dob">Date of Birth:</label>
@@ -210,11 +232,25 @@
             </div>
             <div class="form-group">
                 <label for="school">School Name:</label>
-                <input type="text" id="school" placeholder="e.g., XYZ High School" required>
+                <select id="school" required>
+                    <option value="" disabled selected>Select School</option>
+                    <option value="The Modern English High School">The Modern English High School</option>
+                    <option value="Sahayadri Shikshan Seva Mandal">Sahayadri Shikshan Seva Mandal</option>
+                    <option value="Premnath English High School">Premnath English High School</option>
+                    <option value="Girija Mhatre English High School">Girija Mhatre English High School</option>
+                    <option value="Others">Others</option>
+                </select>
+                <input type="text" id="otherSchool" class="other-input" placeholder="Enter school name">
             </div>
             <div class="form-group">
                 <label for="address">Address:</label>
-                <input type="text" id="address" placeholder="e.g., 123 Main St, City" required>
+                <select id="address" required>
+                    <option value="" disabled selected>Select Address</option>
+                    <option value="Someshwar Nagar, Juchandra Village, Naigaon East">Someshwar Nagar, Juchandra Village, Naigaon East</option>
+                    <option value="Mhatre Wadi, Juchandra Village, Naigaon East">Mhatre Wadi, Juchandra Village, Naigaon East</option>
+                    <option value="Others">Others</option>
+                </select>
+                <input type="text" id="otherAddress" class="other-input" placeholder="Enter full address">
             </div>
             <div class="form-group">
                 <label for="photo">Student Photo:</label>
@@ -265,8 +301,6 @@
         }
 
         let photoUploadInProgress = false;
-        // Initialize isPhotoUploadSuccessful to false. It will be set to true only if a photo is
-        // already present (fetched from DB) or successfully uploaded.
         let isPhotoUploadSuccessful = false; 
 
         // Get global references to elements that will be used across functions
@@ -274,7 +308,9 @@
         const dobInput = document.getElementById('dob');
         const mobInput = document.getElementById('mob');
         const schoolInput = document.getElementById('school');
+        const otherSchoolInput = document.getElementById('otherSchool');
         const addressInput = document.getElementById('address');
+        const otherAddressInput = document.getElementById('otherAddress');
         const photoInput = document.getElementById('photo');
         const currentPhotoPreview = document.getElementById('currentPhotoPreview');
         const saveProfileBtn = document.getElementById('saveProfileBtn');
@@ -283,24 +319,26 @@
 
 
         function checkFormValidityAndToggleSaveButton() {
+            let schoolValue = schoolInput.value;
+            let addressValue = addressInput.value;
+
+            // Check if "Others" is selected and the corresponding input field is filled
+            if (schoolValue === 'Others') {
+                schoolValue = otherSchoolInput.value.trim();
+            }
+            if (addressValue === 'Others') {
+                addressValue = otherAddressInput.value.trim();
+            }
+
             const allRequiredFieldsFilled =
                 stdInput.value.trim() !== '' &&
                 dobInput.value.trim() !== '' &&
                 mobInput.value.trim() !== '' &&
-                schoolInput.value.trim() !== '' &&
-                addressInput.value.trim() !== '';
-
-            // Debugging logs
-            console.log('--- checkFormValidityAndToggleSaveButton ---');
-            console.log('allRequiredFieldsFilled:', allRequiredFieldsFilled);
-            console.log('photoUploadInProgress:', photoUploadInProgress);
-            console.log('isPhotoUploadSuccessful (current state):', isPhotoUploadSuccessful); 
+                schoolValue !== '' && // Use the potentially new school value
+                addressValue !== ''; // Use the potentially new address value
 
             // Button is enabled if all text fields are filled AND no photo upload is in progress AND photo upload was successful (if attempted)
             saveProfileBtn.disabled = !(allRequiredFieldsFilled && !photoUploadInProgress && isPhotoUploadSuccessful);
-            console.log('saveProfileBtn.disabled set to:', saveProfileBtn.disabled);
-            console.log('--------------------------------------------');
-
 
             if (!saveProfileBtn.disabled) {
                 // Clear any previous validation messages if form becomes valid
@@ -346,10 +384,29 @@
                     const studentData = response.documents[0];
                     studentDocumentId = studentData.$id;
                     stdInput.value = studentData.std || '';
-                    dobInput.value = studentData.dob || ''; // Assumes DOB is stored in YYYY-MM-DD format
+                    dobInput.value = studentData.dob || '';
                     mobInput.value = studentData.mob || '';
-                    schoolInput.value = studentData.school || '';
-                    addressInput.value = studentData.add || '';
+
+                    // Handle School Name dropdown and other input
+                    const schoolValue = studentData.school || '';
+                    if (['The Modern English High School', 'Sahayadri Shikshan Seva Mandal', 'Premnath English High School', 'Girija Mhatre English High School'].includes(schoolValue)) {
+                        schoolInput.value = schoolValue;
+                    } else if (schoolValue) {
+                        schoolInput.value = 'Others';
+                        otherSchoolInput.value = schoolValue;
+                        otherSchoolInput.style.display = 'block';
+                    }
+
+                    // Handle Address dropdown and other input
+                    const addressValue = studentData.add || '';
+                    if (['Someshwar Nagar, Juchandra Village, Naigaon East', 'Mhatre Wadi, Juchandra Village, Naigaon East'].includes(addressValue)) {
+                        addressInput.value = addressValue;
+                    } else if (addressValue) {
+                        addressInput.value = 'Others';
+                        otherAddressInput.value = addressValue;
+                        otherAddressInput.style.display = 'block';
+                    }
+
                     currentPhotoFileId = studentData.photoId || null;
 
                     if (currentPhotoFileId) {
@@ -359,36 +416,43 @@
                             currentPhotoPreview.style.display = 'block';
                             photoUploadStatus.textContent = 'Current photo loaded.';
                             photoUploadStatus.className = 'success';
-                            isPhotoUploadSuccessful = true; // Set to true if a photo is already present
+                            isPhotoUploadSuccessful = true;
                         } catch (fileError) {
                             console.warn('Could not load photo preview:', fileError);
                             currentPhotoPreview.style.display = 'none';
                             photoUploadStatus.textContent = 'Could not load current photo.';
                             photoUploadStatus.className = 'error';
-                            isPhotoUploadSuccessful = false; // Failed to load existing photo, so not successful
+                            isPhotoUploadSuccessful = false;
                         }
                     } else {
                         photoUploadStatus.textContent = 'No photo uploaded yet.';
                         photoUploadStatus.className = '';
-                        isPhotoUploadSuccessful = false; // No photo exists, so not successful until one is uploaded
+                        isPhotoUploadSuccessful = false;
                     }
                 } else {
-                    // No existing document, so no photo exists yet.
                     isPhotoUploadSuccessful = false;
                 }
             } catch (error) {
                 console.error("Error fetching student data:", error);
                 displayMessage('Failed to load existing profile data. Please try again.', 'error');
-                isPhotoUploadSuccessful = false; // Assume not successful if there's an error
+                isPhotoUploadSuccessful = false;
             }
 
-            // Initial check to set button state after loading existing data
-            checkFormValidityAndToggleSaveButton();
-
             // Event listeners for input changes to dynamically enable/disable the button
-            const formInputs = [stdInput, dobInput, mobInput, schoolInput, addressInput];
+            const formInputs = [stdInput, dobInput, mobInput, schoolInput, otherSchoolInput, addressInput, otherAddressInput];
             formInputs.forEach(input => {
                 input.addEventListener('input', checkFormValidityAndToggleSaveButton);
+            });
+
+            // Listeners for 'Others' option
+            schoolInput.addEventListener('change', () => {
+                otherSchoolInput.style.display = schoolInput.value === 'Others' ? 'block' : 'none';
+                checkFormValidityAndToggleSaveButton();
+            });
+
+            addressInput.addEventListener('change', () => {
+                otherAddressInput.style.display = addressInput.value === 'Others' ? 'block' : 'none';
+                checkFormValidityAndToggleSaveButton();
             });
 
             photoInput.addEventListener('change', async () => {
@@ -452,6 +516,9 @@
                 }
             });
 
+            // Initial check to set button state after loading existing data
+            checkFormValidityAndToggleSaveButton();
+
 
             profileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -467,10 +534,12 @@
                 const studentStd = stdInput.value.trim();
                 const studentDob = dobInput.value;
                 const studentMob = mobInput.value.trim();
-                const studentSchool = schoolInput.value.trim();
-                const studentAddress = addressInput.value.trim();
-
-                let photoIdToSave = currentPhotoFileId; // This holds the ID of the photo that should be linked (newly uploaded or existing)
+                
+                // Get the correct school and address value
+                const studentSchool = schoolInput.value === 'Others' ? otherSchoolInput.value.trim() : schoolInput.value.trim();
+                const studentAddress = addressInput.value === 'Others' ? otherAddressInput.value.trim() : addressInput.value.trim();
+                
+                let photoIdToSave = currentPhotoFileId;
 
                 const dataToUpdate = {
                     std: studentStd,
@@ -478,7 +547,7 @@
                     mob: studentMob,
                     school: studentSchool,
                     add: studentAddress,
-                    photoId: photoIdToSave, // Save the new or existing photo ID, or null if cleared
+                    photoId: photoIdToSave,
                 };
 
                 try {
@@ -487,9 +556,9 @@
                         await databases.createDocument(
                             DATABASE_ID,
                             COLLECTION_ID,
-                            ID.unique(), // Let Appwrite generate a unique ID for the document
+                            ID.unique(),
                             {
-                                id: loggedInStudentId, // Link by student ID
+                                id: loggedInStudentId,
                                 name: loggedInStudentName,
                                 ...dataToUpdate
                             }
@@ -521,7 +590,7 @@
         function displayMessage(message, type) {
             const messageDiv = document.getElementById('message');
             messageDiv.textContent = message;
-            messageDiv.className = ''; // Clear existing classes
+            messageDiv.className = '';
             messageDiv.classList.add(type);
             messageDiv.style.display = 'block';
         }
